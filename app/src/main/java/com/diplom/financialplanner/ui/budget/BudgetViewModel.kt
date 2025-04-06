@@ -11,7 +11,6 @@ import com.diplom.financialplanner.data.database.entity.BudgetEntity
 import com.diplom.financialplanner.data.repository.BudgetRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.util.Date
 
 /**
  * Состояние UI для экрана управления бюджетами.
@@ -49,10 +48,21 @@ class BudgetViewModel(
     private fun loadAllBudgets() {
         viewModelScope.launch {
             budgetRepository.getAllBudgetsStream()
-                .onStart { _uiState.update { it.copy(isLoadingAllBudgets = true) } }
-                .catch { e -> handleLoadingError(e, "списка бюджетов") }
+                .onStart {
+                    Log.d("BudgetVM_History", "Starting to load all budgets...")
+                    _uiState.update { it.copy(isLoadingAllBudgets = true) }
+                }
+                .catch { e ->
+                    Log.e("BudgetVM_History", "Error loading all budgets", e)
+                    _uiState.update { it.copy(isLoadingAllBudgets = false, errorMessage = "Ошибка загрузки списка бюджетов: ${e.message}") }
+                }
                 .collect { budgets ->
-                    Log.d("BudgetVM", "All budgets stream updated: ${budgets.size} items")
+                    // --- ЛОГГИРОВАНИЕ РЕЗУЛЬТАТА ---
+                    Log.i("BudgetVM_History", ">>> All Budgets Flow Emitted: ${budgets.size} items")
+                    if (budgets.isNotEmpty()) {
+                        Log.d("BudgetVM_History", "First budget in list: ${budgets[0]}") // Логгируем первый для примера
+                    }
+                    // --- КОНЕЦ ЛОГГИРОВАНИЯ ---
                     _uiState.update { it.copy(isLoadingAllBudgets = false, allBudgets = budgets) }
                 }
         }

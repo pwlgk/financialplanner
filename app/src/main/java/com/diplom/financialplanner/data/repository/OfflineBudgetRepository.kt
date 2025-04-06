@@ -6,21 +6,22 @@ import com.diplom.financialplanner.data.database.dao.BudgetWithLimits
 import com.diplom.financialplanner.data.database.dao.BudgetCategoryProgress
 import com.diplom.financialplanner.data.database.entity.BudgetCategoryLimitEntity
 import com.diplom.financialplanner.data.database.entity.BudgetEntity
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
+import com.diplom.financialplanner.data.database.entity.CategoryEntity // Добавлен импорт
+import com.diplom.financialplanner.data.database.entity.TransactionEntity // Добавлен импорт
+import com.diplom.financialplanner.data.database.entity.TransactionType // Добавлен импорт
+import kotlinx.coroutines.flow.* // Убедитесь, что импортированы flowOf, combine, map, flatMapLatest, distinctUntilChanged
 import java.util.Date
 
 /**
  * Реализация репозитория бюджетов, работающая с локальной базой данных Room.
  * @param budgetDao DAO для доступа к данным бюджетов и лимитов.
  * @param categoryRepository Репозиторий категорий для получения имен.
+ * @param transactionRepository Репозиторий транзакций для получения потока транзакций.
  */
 class OfflineBudgetRepository(
     private val budgetDao: BudgetDao,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val transactionRepository: TransactionRepository // Добавлена зависимость
 ) : BudgetRepository {
 
     override fun getCurrentBudgetWithLimits(date: Date): Flow<BudgetWithLimits?> =
@@ -40,14 +41,11 @@ class OfflineBudgetRepository(
         } else {
             budgetDao.insertBudget(budget)
         }
-
         val limitsWithBudgetId = limits.map { it.copy(budgetId = budgetId) }
-
-        // Удаляем старые лимиты только при обновлении
-        if(isUpdate) {
+        if (isUpdate) {
             budgetDao.deleteLimitsForBudget(budgetId)
         }
-        budgetDao.insertLimits(limitsWithBudgetId) // Вставляем новые/обновленные
+        budgetDao.insertLimits(limitsWithBudgetId)
         Log.d("BudgetRepo", "Saved budget (ID: $budgetId, IsUpdate: $isUpdate) with ${limits.size} limits.")
         return budgetId
     }
@@ -56,38 +54,53 @@ class OfflineBudgetRepository(
         budgetDao.deleteBudget(budget)
     }
 
+    // --- РЕАКТИВНАЯ ВЕРСИЯ ПОЛУЧЕНИЯ ПРОГРЕССА ---
     override fun getCurrentBudgetProgress(date: Date): Flow<List<BudgetCategoryProgress>> {
         return budgetDao.getCurrentBudgetWithLimits(date)
-            .flatMapLatest { budgetWithLimits ->
+            .flatMapLatest { budgetWithLimits: BudgetWithLimits? -> // Явно указываем тип budgetWithLimits
                 if (budgetWithLimits == null) {
                     Log.d("BudgetRepo", "getCurrentBudgetProgress: No current budget found.")
-                    flowOf(emptyList()) // Нет бюджета - пустой список прогресса
+                    flowOf(emptyList()) // Возвращаем пустой список
                 } else {
                     Log.d("BudgetRepo", "getCurrentBudgetProgress: Budget found: ${budgetWithLimits.budget.name}. Calculating.")
-                    // Запрос трат за период бюджета
-                    val spentFlow = flowOf(
-                        budgetDao.getSpentAmountByCategoryForPeriod(
-                            budgetWithLimits.budget.startDate,
-                            budgetWithLimits.budget.endDate
-                        )
-                    )
-                    // Запрос категорий расходов для получения имен
-                    val categoriesFlow = categoryRepository.getCategoriesByTypeStream("expense")
+                    // Получаем необходимые потоки
+                    val allTransactionsFlow: Flow<List<TransactionEntity>> = transactionRepository.getAllTransactionsStream()
+                    val categoriesFlow: Flow<List<CategoryEntity>> = categoryRepository.getCategoriesByTypeStream("expense")
 
-                    // Объединяем лимиты, траты и категории
+                    // Объединяем потоки
                     combine(
-                        flowOf(budgetWithLimits.limits), // Лимиты из текущего бюджета
-                        spentFlow,                       // Траты за период
-                        categoriesFlow                   // Все категории расходов
-                    ) { limits, spentList, categories ->
-                        Log.v("BudgetRepo", "Combining limits (${limits.size}), spent (${spentList.size}), categories (${categories.size})")
-                        val spentMap = spentList.associateBy { it.categoryId }
-                        val categoryMap = categories.associateBy { it.id }
+                        flowOf(budgetWithLimits.limits), // Поток из списка лимитов
+                        allTransactionsFlow,             // Поток всех транзакций
+                        categoriesFlow                   // Поток категорий расходов
+                    ) { limits: List<BudgetCategoryLimitEntity>, // Явно указываем типы в лямбде combine
+                        allTransactions: List<TransactionEntity>,
+                        categories: List<CategoryEntity> ->
 
-                        // Создаем список прогресса, объединяя данные
-                        limits.mapNotNull { limit ->
-                            categoryMap[limit.categoryId]?.let { category ->
-                                val spentAmount = spentMap[limit.categoryId]?.totalSpent ?: 0.0
+                        Log.v("BudgetRepo", "Combining for budget progress: limits=${limits.size}, transactions=${allTransactions.size}, categories=${categories.size}")
+
+                        // --- Пересчет трат ВНУТРИ combine ---
+                        val startDate = budgetWithLimits.budget.startDate
+                        val endDate = budgetWithLimits.budget.endDate
+                        // Рассчитываем траты по категориям за период
+                        val spentMap: Map<Long, Double> = allTransactions
+                            .filter { transaction: TransactionEntity -> // Явно указываем тип transaction
+                                transaction.type == TransactionType.EXPENSE &&
+                                        transaction.categoryId != null &&
+                                        limits.any { limit -> limit.categoryId == transaction.categoryId } && // Проверяем наличие лимита для категории транзакции
+                                        !transaction.date.before(startDate) && !transaction.date.after(endDate)
+                            }
+                            .groupBy { transaction: TransactionEntity -> transaction.categoryId!! } // Группируем (уже отфильтровали null)
+                            .mapValues { entry: Map.Entry<Long, List<TransactionEntity>> -> // Явно указываем тип entry
+                                entry.value.sumOf { transaction -> transaction.amount } // Суммируем
+                            }
+                        // --- Конец пересчета трат ---
+
+                        val categoryMap: Map<Long, CategoryEntity> = categories.associateBy { category -> category.id } // Явно указываем тип category
+
+                        // Формируем итоговый список прогресса
+                        limits.mapNotNull { limit: BudgetCategoryLimitEntity -> // Явно указываем тип limit
+                            categoryMap[limit.categoryId]?.let { category: CategoryEntity -> // Явно указываем тип category
+                                val spentAmount = spentMap[limit.categoryId] ?: 0.0
                                 BudgetCategoryProgress(
                                     categoryId = limit.categoryId,
                                     categoryName = category.name,
@@ -96,16 +109,21 @@ class OfflineBudgetRepository(
                                 )
                             } ?: run {
                                 Log.w("BudgetRepo", "Category with ID ${limit.categoryId} not found for limit, skipping.")
-                                null // Исключаем, если категория не найдена
+                                null
                             }
                         }
                     }
                 }
             }
+            .distinctUntilChanged() // Эмитим, только если список прогресса изменился
+            .catch { e -> // Обработка ошибок потока
+                Log.e("BudgetRepo", "Error in getCurrentBudgetProgress flow", e)
+                emit(emptyList()) // Возвращаем пустой список при ошибке
+            }
     }
+    // --- КОНЕЦ РЕАКТИВНОЙ ВЕРСИИ ---
 
     override suspend fun isCategoryUsedInBudgets(categoryId: Long): Boolean {
-        // Проверяем, есть ли хотя бы один лимит с этой категорией
         return budgetDao.countLimitsForCategory(categoryId) > 0
     }
 }
