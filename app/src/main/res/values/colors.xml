@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- =========================================== -->
+    <!-- == Светлая Тема (Light Theme) Цвета       == -->
+    <!-- =========================================== -->
+
+    <!-- Primary (Тёмный фиолетовый) -->
+    <color name="light_primary">#4B2E83</color> <!-- Royal Purple -->
+    <color name="light_onPrimary">#FFFFFF</color>
+    <color name="light_primaryContainer">#DCD1F2</color> <!-- Светлый сиреневый -->
+    <color name="light_onPrimaryContainer">#1E1033</color> <!-- Очень тёмный фиолетовый -->
+
+    <!-- Secondary (Тёмный зелёный) -->
+    <color name="light_secondary">#2E5939</color> <!-- Hunter Green -->
+    <color name="light_onSecondary">#FFFFFF</color>
+    <color name="light_secondaryContainer">#CBE6D6</color> <!-- Светло-мятный -->
+    <color name="light_onSecondaryContainer">#102317</color> <!-- Очень тёмный зелёный -->
+
+    <!-- Tertiary (Благородный сливовый) -->
+    <color name="light_tertiary">#6B3FA0</color>
+    <color name="light_onTertiary">#FFFFFF</color>
+    <color name="light_tertiaryContainer">#E4D3F7</color>
+    <color name="light_onTertiaryContainer">#2D0C4A</color>
+
+    <!-- Error -->
+    <color name="light_error">#B00020</color>
+    <color name="light_onError">#FFFFFF</color>
+    <color name="light_errorContainer">#FFDAD6</color>
+    <color name="light_onErrorContainer">#410002</color>
+
+    <!-- Background / Surface -->
+    <color name="light_background">#F8F8F8</color>
+    <color name="light_onBackground">#1A1A1A</color>
+    <color name="light_surface">#F8F8F8</color>
+    <color name="light_onSurface">#1A1A1A</color>
+
+    <!-- Variants / Outline -->
+    <color name="light_surfaceVariant">#E3E0EC</color>
+    <color name="light_onSurfaceVariant">#474552</color>
+    <color name="light_outline">#77737F</color>
+    <color name="light_outlineVariant">#CBC6D9</color>
+
+    <!-- =========================================== -->
+    <!-- == Темная Тема (Dark Theme) Цвета         == -->
+    <!-- =========================================== -->
+
+    <!-- Primary (Тёмно-фиолетовый) -->
+    <color name="dark_primary">#B7A8E3</color>
+    <color name="dark_onPrimary">#2A1B52</color>
+    <color name="dark_primaryContainer">#3B2A63</color>
+    <color name="dark_onPrimaryContainer">#E2D6F9</color>
+
+    <!-- Secondary (Тёмно-зелёный) -->
+    <color name="dark_secondary">#A0D0B1</color>
+    <color name="dark_onSecondary">#173524</color>
+    <color name="dark_secondaryContainer">#2B4A35</color>
+    <color name="dark_onSecondaryContainer">#D5F3E2</color>
+
+    <!-- Tertiary (Светлый сливовый) -->
+    <color name="dark_tertiary">#D9C2F2</color>
+    <color name="dark_onTertiary">#3E1C6A</color>
+    <color name="dark_tertiaryContainer">#563981</color>
+    <color name="dark_onTertiaryContainer">#EFE0FC</color>
+
+    <!-- Error -->
+    <color name="dark_error">#FFB4AB</color>
+    <color name="dark_onError">#690005</color>
+    <color name="dark_errorContainer">#93000A</color>
+    <color name="dark_onErrorContainer">#FFDAD6</color>
+
+    <!-- Background / Surface -->
+    <color name="dark_background">#121212</color>
+    <color name="dark_onBackground">#E6E1EC</color>
+    <color name="dark_surface">#121212</color>
+    <color name="dark_onSurface">#E6E1EC</color>
+
+    <!-- Variants / Outline -->
+    <color name="dark_surfaceVariant">#46424F</color>
+    <color name="dark_onSurfaceVariant">#CCC6D8</color>
+    <color name="dark_outline">#A6A1B1</color>
+    <color name="dark_outlineVariant">#514C5C</color>
+
+    <!-- =========================================== -->
+    <!-- == Специфичные Цвета Приложения           == -->
+    <!-- =========================================== -->
+    <color name="colorExpense">#D32F2F</color>
+    <color name="colorIncome">#388E3C</color>
+    <color name="colorWarning">#FFA000</color>
+
+    <!-- =========================================== -->
+    <!-- == Стандартные Цвета                      == -->
+    <!-- =========================================== -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="transparent">#00000000</color>
+
+
+    <!-- =========================================== -->
+    <!-- == Обратная совместимость (Компромисс!)   == -->
+    <!-- == Эти цвета НЕ БУДУТ меняться в темной  == -->
+    <!-- == теме при использовании из Kotlin кода  == -->
+    <!-- =========================================== -->
+    <color name="colorPrimary">@color/light_primary</color> <!-- Ссылка на светлый primary -->
+    <color name="colorPrimaryVariant">@color/light_primaryContainer</color> <!-- Ссылка на светлый primaryContainer (или light_primary, если надо темнее) -->
+    <color name="colorOnPrimary">@color/light_onPrimary</color>
+    <color name="colorPrimaryContainer">@color/light_primaryContainer</color>
+    <color name="colorOnPrimaryContainer">@color/light_onPrimaryContainer</color>
+    <color name="colorSecondary">@color/light_secondary</color>
+    <color name="colorSecondaryVariant">@color/light_secondaryContainer</color> <!-- Ссылка на светлый secondaryContainer (или light_secondary) -->
+    <color name="colorOnSecondary">@color/light_onSecondary</color>
+    <color name="colorSecondaryContainer">@color/light_secondaryContainer</color>
+    <color name="colorOnSecondaryContainer">@color/light_onSecondaryContainer</color>
+    <color name="colorTertiary">@color/light_tertiary</color>
+    <color name="colorOnTertiary">@color/light_onTertiary</color>
+    <color name="colorTertiaryContainer">@color/light_tertiaryContainer</color>
+    <color name="colorOnTertiaryContainer">@color/light_onTertiaryContainer</color>
+    <color name="colorError">@color/light_error</color> <!-- Ссылка на светлый error -->
+    <color name="colorOnError">@color/light_onError</color>
+    <color name="colorErrorContainer">@color/light_errorContainer</color>
+    <color name="colorOnErrorContainer">@color/light_onErrorContainer</color>
+    <color name="colorSurface">@color/light_surface</color>
+    <color name="colorOnSurface">@color/light_onSurface</color>
+    <color name="colorSurfaceVariant">@color/light_surfaceVariant</color>
+    <color name="colorOnSurfaceVariant">@color/light_onSurfaceVariant</color>
+    <color name="colorOutline">@color/light_outline</color>
+    <color name="colorOutlineVariant">@color/light_outlineVariant</color>
+    <color name="colorBackground">@color/light_background</color>
+    <color name="colorOnBackground">@color/light_onBackground</color>
+
+    <!-- Старые дизайн-библиотеки -->
+    <color name="design_default_color_primary">@color/light_primary</color>
+    <color name="design_default_color_primary_variant">@color/light_primaryContainer</color> <!-- Или light_primary, если нужен был темнее -->
+    <color name="design_default_color_error">@color/light_error</color>
+    <color name="design_default_color_on_error">@color/light_onError</color>
+    <color name="design_default_color_on_surface">@color/light_onSurface</color>
+
+    <!-- Динамические цвета Material (ссылаемся на статический аналог) -->
+    <color name="material_dynamic_neutral_90">@color/light_surfaceVariant</color> <!-- Приближенный статический аналог -->
+
+</resources>

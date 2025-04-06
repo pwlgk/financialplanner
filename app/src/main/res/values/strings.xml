@@ -1,0 +1,166 @@
+<resources>
+    <string name="app_name">Финансовый Планировщик</string> <!-- Изменено -->
+
+    <!-- Нижняя навигация и заголовки экранов -->
+    <string name="title_dashboard">Главная</string>
+    <string name="title_expenses">Расходы</string>
+    <string name="title_income">Доходы</string>
+    <string name="title_budget">Бюджет</string>
+    <string name="title_reports">Отчеты</string>
+    <string name="title_goals">Цели</string>
+    <string name="title_categories">Категории</string>
+
+    <!-- Общие -->
+    <string name="save">Сохранить</string>
+    <string name="delete">Удалить</string>
+    <string name="cancel">Отмена</string>
+    <string name="update">Обновить</string>
+    <string name="loading">Загрузка...</string>
+    <string name="saving">Сохранение...</string>
+    <string name="unknown_category">Неизвестная категория</string>
+    <string name="category_not_found_placeholder">Категория не найдена</string> <!-- Для случаев, когда категория null -->
+    <string name="category_not_found">Категория #%1$d</string> <!-- Когда не удалось получить имя по ID -->
+    <string name="error_generic">Произошла ошибка</string>
+    <string name="error_navigation_failed">Ошибка перехода</string>
+
+    <!-- Форматирование сумм -->
+    <string name="expense_amount_format">-%s</string>
+    <string name="income_amount_format">+%s</string>
+
+    <!-- Dashboard -->
+    <string name="current_balance">Текущий баланс</string>
+    <string name="expenses_this_month">Расходы в этом месяце</string>
+    <string name="add_expense_short">Расход</string>
+    <string name="add_income_short">Доход</string>
+    <string name="recent_transactions">Недавние транзакции</string>
+    <string name="no_transactions_yet">Транзакций пока нет</string>
+    <string name="error_loading_dashboard">Ошибка загрузки данных</string>
+    <string name="current_budget_status">Статус текущего бюджета</string>
+    <string name="budget_not_set">Бюджет не задан</string>
+    <string name="set_budget">Задать бюджет</string>
+    <string name="overspent_categories_format">Превышено: %d кат.</string>
+    <string name="recommendation_overspent_category">Внимание! Превышен лимит по категории \'%1$s\'.</string>
+    <string name="recommendation_overspent_multiple">Внимание! Превышены лимиты по %1$d категориям.</string>
+    <string name="categories">Категории</string>
+
+    <!-- Транзакции (Добавление/Редактирование) -->
+    <string name="hint_amount">Сумма</string>
+    <string name="hint_category">Категория</string>
+    <string name="hint_date">Дата</string>
+    <string name="hint_description_optional">Описание (необязательно)</string>
+    <string name="select_date">Выбрать дату</string>
+    <string name="error_amount_required">Сумма обязательна</string>
+    <string name="error_amount_invalid">Введите корректную сумму</string>
+    <string name="error_category_required">Выберите категорию</string>
+    <string name="error_date_required">Выберите дату</string>
+    <string name="expense_saved_success">Расход успешно сохранен</string>
+    <string name="income_saved_success">Доход успешно сохранен</string>
+    <string name="expense_updated_success">Расход успешно обновлен</string>
+    <string name="income_updated_success">Доход успешно обновлен</string>
+    <string name="add_expense_title">Добавить расход</string>
+    <string name="edit_expense_title">Изменить расход</string>
+    <string name="add_income_title">Добавить доход</string>
+    <string name="edit_income_title">Изменить доход</string>
+    <string name="error_saving_transaction">Ошибка сохранения транзакции</string>
+    <string name="error_deleting_transaction">Ошибка удаления транзакции</string>
+    <string name="delete_transaction_confirmation_title">Подтверждение удаления</string>
+    <string name="delete_expense_confirmation_message">Удалить этот расход?</string>
+    <string name="delete_income_confirmation_message">Удалить этот доход?</string>
+    <string name="expense_deleted_success">Расход удален</string>
+    <string name="income_deleted_success">Доход удален</string>
+    <string name="error_navigation_failed_details">Не удалось перейти к %1$s</string>
+
+    <!-- Транзакции (Списки) -->
+    <string name="no_expenses_yet">У вас еще нет расходов.\nНажмите +, чтобы добавить первый.</string>
+    <string name="no_income_yet">У вас еще нет доходов.\nНажмите +, чтобы добавить первый.</string>
+    <string name="add_expense">Добавить расход</string>
+    <string name="add_income">Добавить доход</string>
+    <string name="error_loading_expenses">Ошибка загрузки расходов</string>
+    <string name="error_loading_income">Ошибка загрузки доходов</string>
+
+    <!-- Бюджеты -->
+    <string name="budget_period">Период бюджета</string>
+    <string name="select_budget_period">Выбрать период бюджета</string>
+    <string name="category_limits">Лимиты по категориям</string>
+    <string name="save_budget">Сохранить бюджет</string>
+    <string name="add_budget">Добавить бюджет</string>
+    <string name="budget_saved_success">Бюджет успешно сохранен</string>
+    <string name="budget_updated_success">Бюджет успешно обновлен</string>
+    <string name="error_saving_budget">Ошибка сохранения бюджета</string>
+    <string name="error_loading_budget_details">Ошибка загрузки данных бюджета</string>
+    <string name="budget_setup_title">Настройка бюджета</string>
+    <string name="no_expense_categories_for_budget">Нет категорий расходов для установки лимитов.\nСначала добавьте категории.</string>
+    <string name="budget_for_month_year">Бюджет на %1$s %2$d</string>
+    <string name="error_select_period">Выберите период бюджета</string>
+    <string name="error_set_limits">Установите хотя бы один лимит</string>
+    <string name="spent_vs_limit_format">%1$s / %2$s</string>
+    <string name="current_budget_progress">Прогресс текущего бюджета</string>
+    <string name="no_active_budget">Нет активного бюджета на текущий период.</string>
+    <string name="budget_history">История бюджетов</string>
+    <string name="create_budget_prompt">Создайте бюджет, чтобы планировать расходы.</string>
+    <string name="no_budget_history_yet">История бюджетов пуста.</string>
+    <string name="delete_budget_confirmation_title">Удалить бюджет?</string>
+    <string name="delete_budget_confirmation_message">Вы уверены, что хотите удалить бюджет \"%1$s\"? Это действие нельзя будет отменить.</string>
+    <string name="budget_deleted_feedback">Бюджет \"%1$s\" удален</string>
+    <string name="error_loading_budgets">Ошибка загрузки бюджетов</string>
+    <string name="error_deleting_budget">Ошибка удаления бюджета</string>
+
+    <!-- Отчеты -->
+    <string name="report_type">Тип отчета</string>
+    <string name="report_expense_by_category">Расходы по категориям</string>
+    <string name="report_income_by_source">Доходы по источникам</string>
+    <string name="report_income_vs_expense">Доходы и Расходы</string>
+    <string name="select_period">Выбрать период</string>
+    <string name="no_data_for_report">Нет данных для построения отчета за выбранный период.</string>
+    <string name="error_loading_report">Ошибка загрузки данных отчета</string>
+    <string name="date_range_picker_title">Выберите диапазон дат</string>
+
+    <!-- Цели -->
+    <string name="no_goals_yet">У вас пока нет финансовых целей.\nНажмите +, чтобы добавить первую.</string>
+    <string name="add_financial_goal">Добавить финансовую цель</string>
+    <string name="goal_progress_format">%1$.0f / %2$.0f</string>
+    <string name="goal_percent_format">%d%%</string>
+    <string name="goal_progress_text_format">%1$s / %2$s</string>
+    <string name="goal_achieved">Цель достигнута!</string>
+    <string name="edit_current_amount">Изменить накопленную сумму</string>
+    <string name="update_goal_amount_title">Обновить накопленную сумму</string>
+    <string name="current_goal_amount">Текущая накопленная сумма</string>
+    <string name="goal_name">Название цели</string>
+    <string name="goal_target_amount">Целевая сумма</string>
+    <string name="add_goal_dialog_title">Добавить цель</string>
+    <string name="edit_goal_dialog_title">Изменить цель</string>
+    <string name="delete_goal_confirmation_title">Удалить цель?</string>
+    <string name="delete_goal_confirmation_message">Вы уверены, что хотите удалить цель \"%1$s\"?</string>
+    <string name="goal_deleted_feedback">Цель \"%1$s\" удалена</string>
+    <string name="goal_saved_success">Цель сохранена</string>
+    <string name="goal_updated_success">Цель обновлена</string>
+    <string name="goal_amount_updated_success">Накопленная сумма обновлена</string>
+    <string name="error_saving_goal">Ошибка сохранения цели</string>
+    <string name="error_deleting_goal">Ошибка удаления цели</string>
+    <string name="error_updating_goal_amount">Ошибка обновления суммы цели</string>
+    <string name="error_goal_name_required">Введите название цели</string>
+    <string name="error_goal_target_amount_required">Введите корректную целевую сумму (больше 0)</string>
+    <string name="error_goal_current_amount_required">Введите корректную текущую сумму (0 или больше)</string>
+    <string name="error_loading_goals">Ошибка загрузки целей</string>
+
+    <!-- Категории -->
+    <string name="no_categories_defined">Категории не определены.</string>
+    <string name="add_category">Добавить категорию</string>
+    <string name="edit_category">Изменить категорию</string>
+    <string name="delete_category">Удалить категорию</string>
+    <string name="category_name">Название категории</string>
+    <string name="expense">Расход</string>
+    <string name="income">Доход</string>
+    <string name="category_type">Тип категории</string>
+    <string name="category_saved_success">Категория сохранена</string>
+    <string name="category_updated_success">Категория обновлена</string>
+    <string name="error_saving_category">Ошибка сохранения категории</string>
+    <string name="delete_category_confirmation_title">Удалить категорию?</string>
+    <string name="delete_category_confirmation_message">Вы уверены, что хотите удалить категорию \"%1$s\"? Связанные транзакции не будут удалены, но потеряют связь с категорией.</string>
+    <string name="category_deleted_feedback">Категория \"%1$s\" удалена</string>
+    <string name="error_category_name_required">Введите название категории</string>
+    <string name="error_category_in_use">Нельзя удалить: категория используется в транзакциях или бюджетах.</string>
+    <string name="error_loading_categories">Ошибка загрузки категорий</string>
+    <string name="error_deleting_category">Ошибка удаления категории</string>
+
+</resources>

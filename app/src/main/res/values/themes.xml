@@ -1,0 +1,83 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Базовая тема приложения (Светлая/Дневная) -->
+    <style name="Theme.FinancialPlanner" parent="Theme.Material3.DayNight.NoActionBar">
+
+        <!-- Основные цвета бренда (из colors.xml) -->
+        <item name="colorPrimary">@color/light_primary</item>
+        <item name="colorOnPrimary">@color/light_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/light_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/light_onPrimaryContainer</item>
+
+        <!-- Вторичные цвета бренда -->
+        <item name="colorSecondary">@color/light_secondary</item>
+        <item name="colorOnSecondary">@color/light_onSecondary</item>
+        <item name="colorSecondaryContainer">@color/light_secondaryContainer</item>
+        <item name="colorOnSecondaryContainer">@color/light_onSecondaryContainer</item>
+
+        <!-- Третичные цвета бренда -->
+        <item name="colorTertiary">@color/light_tertiary</item>
+        <item name="colorOnTertiary">@color/light_onTertiary</item>
+        <item name="colorTertiaryContainer">@color/light_tertiaryContainer</item>
+        <item name="colorOnTertiaryContainer">@color/light_onTertiaryContainer</item>
+
+        <!-- Цвета ошибок -->
+        <item name="colorError">@color/light_error</item>
+        <item name="colorOnError">@color/light_onError</item>
+        <item name="colorErrorContainer">@color/light_errorContainer</item>
+        <item name="colorOnErrorContainer">@color/light_onErrorContainer</item>
+
+        <!-- Фон и Поверхности -->
+        <item name="android:colorBackground">@color/light_background</item>
+        <item name="colorOnBackground">@color/light_onBackground</item>
+        <item name="colorSurface">@color/light_surface</item>
+        <item name="colorOnSurface">@color/light_onSurface</item>
+        <item name="colorSurfaceVariant">@color/light_surfaceVariant</item>
+        <item name="colorOnSurfaceVariant">@color/light_onSurfaceVariant</item>
+
+        <!-- Обводка -->
+        <item name="colorOutline">@color/light_outline</item>
+        <item name="colorOutlineVariant">@color/light_outlineVariant</item>
+
+        <!-- Цвет статус-бара (можно использовать ?attr/colorPrimary или ?attr/colorSurface) -->
+        <item name="android:statusBarColor">@color/light_primary</item>
+        <!-- Для темных иконок в светлом статус-баре -->
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item> <!-- false т.к. фон статус бара темный (синий) -->
+
+        <!-- Кастомные атрибуты цвета -->
+        <item name="colorWarning">@color/colorWarning</item>
+
+        <!-- Стиль для MaterialAlertDialog -->
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.App.MaterialAlertDialog</item>
+
+        <!-- Настройка шрифтов и форм (раскомментируйте и настройте при необходимости) -->
+        <!-- <item name="fontFamily">@font/your_font_family</item> -->
+        <!-- <item name="android:fontFamily">@font/your_font_family</item> -->
+        <!-- <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.App.SmallComponent</item> -->
+        <!-- <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.App.MediumComponent</item> -->
+        <!-- <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.App.LargeComponent</item> -->
+
+
+    </style>
+
+    <!-- Базовый стиль для MaterialAlertDialog (будет адаптироваться к теме) -->
+    <style name="ThemeOverlay.App.MaterialAlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <!-- <item name="colorSurface">@color/some_dialog_color</item> -->
+        <!-- <item name="materialAlertDialogTitleTextStyle">@style/MyDialogTitleText</item> -->
+    </style>
+
+    <!-- Примеры настройки форм (раскомментируйте и настройте при необходимости) -->
+    <!--
+    <style name="ShapeAppearance.App.SmallComponent" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+    <style name="ShapeAppearance.App.MediumComponent" parent="ShapeAppearance.Material3.MediumComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+     <style name="ShapeAppearance.App.LargeComponent" parent="ShapeAppearance.Material3.LargeComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+     -->
+</resources>

@@ -1,0 +1,59 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Тема приложения для ночного режима -->
+    <style name="Theme.FinancialPlanner" parent="Theme.Material3.DayNight.NoActionBar">
+        <!--
+            Material 3 автоматически генерирует темную палитру из цветов,
+            заданных в основном файле themes.xml (и colors.xml).
+            Переопределяем здесь только то, что нужно изменить СПЕЦИАЛЬНО для темной темы.
+        -->
+
+        <!-- Основные цвета бренда (Используем переопределенные темные версии из colors.xml) -->
+        <item name="colorPrimary">@color/dark_primary</item>
+        <item name="colorOnPrimary">@color/dark_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/dark_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/dark_onPrimaryContainer</item>
+
+        <!-- Вторичные цвета бренда -->
+        <item name="colorSecondary">@color/dark_secondary</item>
+        <item name="colorOnSecondary">@color/dark_onSecondary</item>
+        <item name="colorSecondaryContainer">@color/dark_secondaryContainer</item>
+        <item name="colorOnSecondaryContainer">@color/dark_onSecondaryContainer</item>
+
+        <!-- Третичные цвета бренда -->
+        <item name="colorTertiary">@color/dark_tertiary</item>
+        <item name="colorOnTertiary">@color/dark_onTertiary</item>
+        <item name="colorTertiaryContainer">@color/dark_tertiaryContainer</item>
+        <item name="colorOnTertiaryContainer">@color/dark_onTertiaryContainer</item>
+
+        <!-- Цвета ошибок -->
+        <item name="colorError">@color/dark_error</item>
+        <item name="colorOnError">@color/dark_onError</item>
+        <item name="colorErrorContainer">@color/dark_errorContainer</item>
+        <item name="colorOnErrorContainer">@color/dark_onErrorContainer</item>
+
+        <!-- Фон и Поверхности -->
+        <item name="android:colorBackground">@color/dark_background</item>
+        <item name="colorOnBackground">@color/dark_onBackground</item>
+        <item name="colorSurface">@color/dark_surface</item>
+        <item name="colorOnSurface">@color/dark_onSurface</item>
+        <item name="colorSurfaceVariant">@color/dark_surfaceVariant</item>
+        <item name="colorOnSurfaceVariant">@color/dark_onSurfaceVariant</item>
+
+        <!-- Обводка -->
+        <item name="colorOutline">@color/dark_outline</item>
+        <item name="colorOutlineVariant">@color/dark_outlineVariant</item>
+        <item name="colorControlNormal">@color/colorExpense</item>
+        <!-- Цвет статус-бара (под цвет поверхности для темной темы) -->
+        <item name="android:statusBarColor">?attr/colorSurface</item>
+        <!-- Для светлых иконок в темном статус-баре (обычно устанавливается автоматически) -->
+        <!-- <item name="android:windowLightStatusBar" tools:targetApi="m">false</item> -->
+
+        <!-- Кастомные атрибуты цвета (оставляем тот же, если подходит) -->
+        <item name="colorWarning">@color/colorWarning</item>
+
+        <!-- Стиль для MaterialAlertDialog (используем тот же, он адаптируется) -->
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.App.MaterialAlertDialog</item>
+
+    </style>
+
+</resources>

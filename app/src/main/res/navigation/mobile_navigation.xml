@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/navigation_dashboard">
+
+    <!-- Глобальные actions (если нужны для прямой навигации между вкладками) -->
+    <action
+        android:id="@+id/action_global_navigation_budget"
+        app:destination="@id/navigation_budget" />
+    <action
+        android:id="@+id/action_global_navigation_goals"
+        app:destination="@id/navigation_goals" />
+    <!-- Добавьте другие глобальные actions по необходимости -->
+
+    <!-- Dashboard (Стартовый экран) -->
+    <fragment
+        android:id="@+id/navigation_dashboard"
+        android:name="com.diplom.financialplanner.ui.dashboard.DashboardFragment"
+        android:label="@string/title_dashboard"
+        tools:layout="@layout/fragment_dashboard">
+        <!-- Actions с Dashboard к экранам добавления/редактирования -->
+        <action
+            android:id="@+id/action_navigation_dashboard_to_addEditExpenseFragment"
+            app:destination="@id/addEditExpenseFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+        <action
+            android:id="@+id/action_navigation_dashboard_to_addEditIncomeFragment"
+            app:destination="@id/addEditIncomeFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+        <action
+            android:id="@+id/action_navigation_dashboard_to_budgetSetupFragment"
+            app:destination="@id/budgetSetupFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+        <action
+            android:id="@+id/action_dashboard_to_categories"
+            app:destination="@id/categoryManagerFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+        <action
+            android:id="@+id/action_dashboard_to_goals"
+            app:destination="@id/navigation_goals"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right"/>
+    </fragment>
+
+    <!-- Расходы -->
+    <fragment
+        android:id="@+id/navigation_expenses"
+        android:name="com.diplom.financialplanner.ui.expense.ExpenseListFragment"
+        android:label="@string/title_expenses"
+        tools:layout="@layout/fragment_expense_list">
+        <!-- Action к экрану добавления/редактирования расхода -->
+        <action
+            android:id="@+id/action_navigation_expenses_to_addEditExpenseFragment"
+            app:destination="@id/addEditExpenseFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+    <fragment
+        android:id="@+id/addEditExpenseFragment"
+        android:name="com.diplom.financialplanner.ui.expense.AddEditExpenseFragment"
+        android:label="{titleArg}"
+        tools:layout="@layout/fragment_add_edit_expense">
+        <!-- Аргументы для передачи ID транзакции и заголовка -->
+        <argument
+            android:name="transactionId"
+            android:defaultValue="0L"
+            app:argType="long" />
+        <argument
+            android:name="titleArg"
+            app:argType="string" />
+    </fragment>
+
+    <!-- Доходы -->
+    <fragment
+        android:id="@+id/navigation_income"
+        android:name="com.diplom.financialplanner.ui.income.IncomeListFragment"
+        android:label="@string/title_income"
+        tools:layout="@layout/fragment_income_list">
+        <!-- Action к экрану добавления/редактирования дохода -->
+        <action
+            android:id="@+id/action_navigation_income_to_addEditIncomeFragment"
+            app:destination="@id/addEditIncomeFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+    <fragment
+        android:id="@+id/addEditIncomeFragment"
+        android:name="com.diplom.financialplanner.ui.income.AddEditIncomeFragment"
+        android:label="{titleArg}"
+        tools:layout="@layout/fragment_add_edit_income">
+        <!-- Аргументы для передачи ID транзакции и заголовка -->
+        <argument
+            android:name="transactionId"
+            android:defaultValue="0L"
+            app:argType="long" />
+        <argument
+            android:name="titleArg"
+            app:argType="string" />
+    </fragment>
+
+    <!-- Бюджеты -->
+    <fragment
+        android:id="@+id/navigation_budget"
+        android:name="com.diplom.financialplanner.ui.budget.BudgetFragment"
+        android:label="@string/title_budget"
+        tools:layout="@layout/fragment_budget">
+        <!-- Action к экрану настройки бюджета -->
+        <action
+            android:id="@+id/action_navigation_budget_to_budgetSetupFragment"
+            app:destination="@id/budgetSetupFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+    <fragment
+        android:id="@+id/budgetSetupFragment"
+        android:name="com.diplom.financialplanner.ui.budget.BudgetSetupFragment"
+        android:label="@string/budget_setup_title"
+        tools:layout="@layout/fragment_budget_setup">
+        <!-- Аргумент для передачи ID бюджета при редактировании -->
+        <argument
+            android:name="budgetId"
+            android:defaultValue="0L"
+            app:argType="long" />
+    </fragment>
+
+    <!-- Отчеты -->
+    <fragment
+        android:id="@+id/navigation_reports"
+        android:name="com.diplom.financialplanner.ui.reports.ReportsFragment"
+        android:label="@string/title_reports"
+        tools:layout="@layout/fragment_reports" />
+
+    <!-- Цели -->
+    <fragment
+        android:id="@+id/navigation_goals"
+        android:name="com.diplom.financialplanner.ui.goals.GoalsFragment"
+        android:label="@string/title_goals"
+        tools:layout="@layout/fragment_goals" />
+
+    <fragment
+        android:id="@+id/categoryManagerFragment"
+        android:name="com.diplom.financialplanner.ui.categories.CategoryManagerFragment"
+        android:label="@string/title_categories"
+        tools:layout="@layout/fragment_category_manager" /><!-- Навигация к диалогам категорий не описывается здесь -->
+
+</navigation>
