@@ -2,130 +2,139 @@ package com.diplom.financialplanner.ui.adapters
 
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.core.widget.doAfterTextChanged
+import androidx.core.widget.doAfterTextChanged // Удобный extension
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.diplom.financialplanner.data.database.entity.CategoryEntity
 import com.diplom.financialplanner.databinding.ItemBudgetCategoryLimitBinding
+import java.text.DecimalFormat // Для более контролируемого форматирования
+import java.text.NumberFormat
+import java.util.Locale
 
-/**
- * Модель данных для элемента списка в адаптере установки лимитов бюджета.
- * @param category Сущность категории.
- * @param limit Лимит, введенный пользователем (может быть null).
- */
+// Модель данных (без изменений)
 data class BudgetLimitItem(
     val category: CategoryEntity,
     var limit: Double? = null
 )
 
-/**
- * Интерфейс для оповещения об изменении лимита в поле ввода.
- */
+// Интерфейс (без изменений)
 interface BudgetLimitChangeListener {
     fun onLimitChanged(categoryId: Long, newLimit: Double?)
 }
 
-/**
- * Адаптер для RecyclerView на экране настройки бюджета.
- * Отображает категории и поля для ввода лимитов.
- * @param listener Слушатель изменений лимитов.
- */
+
 class BudgetLimitAdapter(
     private val listener: BudgetLimitChangeListener
 ) : ListAdapter<BudgetLimitItem, BudgetLimitAdapter.BudgetLimitViewHolder>(BudgetLimitDiffCallback()) {
 
+    // Используем DecimalFormat для более предсказуемого вывода без лишних нулей или E-нотации
+    private val numberFormatter = DecimalFormat("#0").apply { // Формат без дробной части
+        maximumFractionDigits = 0
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BudgetLimitViewHolder {
         val binding = ItemBudgetCategoryLimitBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return BudgetLimitViewHolder(binding, listener)
+        // Передаем форматтер в ViewHolder
+        return BudgetLimitViewHolder(binding, listener, numberFormatter)
     }
 
     override fun onBindViewHolder(holder: BudgetLimitViewHolder, position: Int) {
         holder.bind(getItem(position))
     }
 
-    /**
-     * Обновляет лимиты в уже отображаемых элементах списка.
-     * Используется для предзаполнения при редактировании бюджета.
-     * @param limitsMap Карта <ID категории, Сумма лимита>.
-     */
-    fun updateLimits(limitsMap: Map<Long, Double>) {
-        val currentList = currentList // Получаем текущий список
-        if (currentList.isNullOrEmpty()) return
+    // Метод updateLimits теперь не нужен, т.к. submitList с DiffUtil справится
+    /*
+    fun updateLimits(limitsMap: Map<Long, Double>) { ... }
+    */
 
-        // Проходим по текущему списку и обновляем лимиты, если они изменились
-        currentList.forEachIndexed { index, item ->
-            limitsMap[item.category.id]?.let { loadedLimit ->
-                if (item.limit != loadedLimit) {
-                    item.limit = loadedLimit // Обновляем лимит в объекте данных
-                    notifyItemChanged(index) // Уведомляем адаптер об изменении элемента
-                }
-            } // ?: run { // Если для категории нет лимита в карте, а он был установлен локально
-            //   if (item.limit != null) {
-            //      item.limit = null
-            //      notifyItemChanged(index)
-            //   }
-            //}
-        }
-    }
-
-    /**
-     * Возвращает текущие установленные лимиты из адаптера.
-     * @return Карта <ID категории, Сумма лимита>.
-     */
     fun getCurrentLimits(): Map<Long, Double> {
         return currentList
-            .mapNotNull { item -> item.limit?.takeIf { it > 0 }?.let { limitValue -> item.category.id to limitValue } }
+            .mapNotNull { item -> item.limit?.takeIf { it > 0 }?.let { item.category.id to it } }
             .toMap()
     }
 
 
-    /** ViewHolder для элемента списка установки лимитов. */
     class BudgetLimitViewHolder(
         private val binding: ItemBudgetCategoryLimitBinding,
-        private val listener: BudgetLimitChangeListener
+        private val listener: BudgetLimitChangeListener,
+        private val formatter: DecimalFormat // Принимаем форматтер
     ) : RecyclerView.ViewHolder(binding.root) {
 
         private var currentItem: BudgetLimitItem? = null
-        private var textWatcher: TextWatcher? = null
+        private var watcher: TextWatcher? = null
+        private var isUpdatingFromCode = false // Флаг для предотвращения рекурсии
 
-        /** Связывает данные BudgetLimitItem с View элементами. */
+        /** Связывает данные и устанавливает слушатель ОДИН РАЗ */
         fun bind(item: BudgetLimitItem) {
             currentItem = item
             binding.tvCategoryName.text = item.category.name
 
-            // --- Установка TextWatcher для поля ввода ---
-            // Сначала удаляем предыдущий watcher, чтобы избежать утечек и двойной обработки
-            binding.etCategoryLimit.removeTextChangedListener(textWatcher)
+            // --- УСТАНОВКА НАЧАЛЬНОГО ЗНАЧЕНИЯ ---
+            isUpdatingFromCode = true // Ставим флаг перед установкой текста
+            val initialText = item.limit?.takeIf { it > 0 }?.let { formatter.format(it) } ?: ""
+            // Устанавливаем только если текст реально отличается
+            if (binding.etCategoryLimit.text.toString() != initialText) {
+                binding.etCategoryLimit.setText(initialText)
+                // Перемещаем курсор в конец после установки текста
+                binding.etCategoryLimit.setSelection(initialText.length)
+            }
+            isUpdatingFromCode = false // Снимаем флаг
 
-            // Устанавливаем текущее значение лимита в поле ввода
-            // Показываем пустую строку, если лимит null или 0
-            binding.etCategoryLimit.setText(item.limit?.takeIf { it > 0 }?.let { "%.0f".format(it) } ?: "")
+            // --- УСТАНОВКА TextWatcher (ЕСЛИ ЕГО ЕЩЕ НЕТ) ---
+            // Удаляем старый, если он был прикреплен к этому EditText ранее (из-за переиспользования VH)
+            watcher?.let { binding.etCategoryLimit.removeTextChangedListener(it) }
 
-            // Создаем и добавляем новый TextWatcher
-            textWatcher = binding.etCategoryLimit.doAfterTextChanged { editable ->
-                // Этот код выполнится ПОСЛЕ изменения текста
+            // Создаем и добавляем новый watcher
+            watcher = binding.etCategoryLimit.doAfterTextChanged { editable ->
+                // Игнорируем изменения, сделанные программно через setText
+                if (isUpdatingFromCode) return@doAfterTextChanged
+
                 val inputText = editable?.toString()
-                val newLimit = inputText?.toDoubleOrNull() // Пытаемся преобразовать в Double
-                // Обновляем лимит в нашем объекте данных
-                currentItem?.limit = newLimit
-                // Уведомляем слушателя об изменении
-                currentItem?.let { boundItem ->
-                    listener.onLimitChanged(boundItem.category.id, newLimit)
+                // Пытаемся распарсить, допускаем пустую строку как null
+                val newLimit = if (inputText.isNullOrBlank()) {
+                    null
+                } else {
+                    try {
+                        // Используем Locale.US для парсинга, так как Double.parseDouble ожидает точку
+                        val format = NumberFormat.getInstance(Locale.US)
+                        format.parse(inputText)?.toDouble()
+                    } catch (e: Exception) {
+                        Log.w("BudgetLimitVH", "Failed to parse input: $inputText", e)
+                        null // Некорректный ввод -> null
+                    }
+                }
+
+                // Округляем до целого, если нужно (или используем Double)
+                val roundedLimit = newLimit?.let { kotlin.math.round(it) }?.takeIf { it > 0 }
+
+                // Обновляем значение в нашем объекте данных, только если оно изменилось
+                if (currentItem?.limit != roundedLimit) {
+                    currentItem?.limit = roundedLimit
+                    // Уведомляем слушателя
+                    currentItem?.let { boundItem ->
+                        listener.onLimitChanged(boundItem.category.id, roundedLimit)
+                    }
                 }
             }
         }
     }
 
-    /** DiffUtil Callback для расчета различий. */
+    // DiffUtil Callback
     private class BudgetLimitDiffCallback : DiffUtil.ItemCallback<BudgetLimitItem>() {
         override fun areItemsTheSame(oldItem: BudgetLimitItem, newItem: BudgetLimitItem): Boolean {
-            return oldItem.category.id == newItem.category.id // Сравниваем по ID категории
+            return oldItem.category.id == newItem.category.id
         }
+
+        // Теперь сравниваем только ID категории, т.к. лимит может меняться пользователем
+        // и мы не хотим лишних перерисовок из-за этого сравнения.
+        // Содержимое (имя категории) обновляем, если изменился сам объект категории.
         override fun areContentsTheSame(oldItem: BudgetLimitItem, newItem: BudgetLimitItem): Boolean {
-            // Сравниваем и категорию, и лимит для корректного обновления UI
+            // Сравниваем объект CategoryEntity и текущее значение лимита,
+            // чтобы DiffUtil корректно обновлял, если лимит загрузился из ViewModel
             return oldItem.category == newItem.category && oldItem.limit == newItem.limit
         }
     }

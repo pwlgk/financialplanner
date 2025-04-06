@@ -56,7 +56,7 @@
         <!-- <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.App.MediumComponent</item> -->
         <!-- <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.App.LargeComponent</item> -->
 
-
+        <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
     </style>
 
     <!-- Базовый стиль для MaterialAlertDialog (будет адаптироваться к теме) -->

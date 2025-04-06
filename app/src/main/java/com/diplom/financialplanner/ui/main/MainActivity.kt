@@ -2,6 +2,7 @@ package com.diplom.financialplanner.ui.main
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.navigation.NavController // Импортируем NavController
 import androidx.navigation.fragment.NavHostFragment // Импортируем NavHostFragment
 // import androidx.navigation.findNavController // Этот импорт больше не нужен напрямую
@@ -18,6 +19,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var navController: NavController // Объявляем переменную для NavController
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)

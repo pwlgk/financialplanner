@@ -1,6 +1,7 @@
 package com.diplom.financialplanner.data.repository
 
 import com.diplom.financialplanner.data.database.dao.CategorySpending
+import com.diplom.financialplanner.data.database.dao.TimeSeriesDataPoint
 import com.diplom.financialplanner.data.database.dao.TransactionDao
 import com.diplom.financialplanner.data.database.entity.TransactionEntity
 import com.diplom.financialplanner.data.database.entity.TransactionType
@@ -8,10 +9,6 @@ import com.diplom.financialplanner.data.model.TransactionWithCategory
 import kotlinx.coroutines.flow.Flow
 import java.util.Date
 
-/**
- * Реализация репозитория транзакций, работающая с локальной базой данных Room.
- * @param transactionDao DAO для доступа к данным транзакций.
- */
 class OfflineTransactionRepository(private val transactionDao: TransactionDao) : TransactionRepository {
 
     override fun getTransactionsWithCategoryByTypeStream(type: TransactionType): Flow<List<TransactionWithCategory>> =
@@ -41,8 +38,14 @@ class OfflineTransactionRepository(private val transactionDao: TransactionDao) :
     override suspend fun getSpendingByCategoryForPeriod(type: TransactionType, startDate: Date, endDate: Date): List<CategorySpending> =
         transactionDao.getSpendingByCategoryForPeriod(type, startDate, endDate)
 
-    override suspend fun isCategoryUsed(categoryId: Long): Boolean {
-        // Проверяем, есть ли хотя бы одна транзакция с этой категорией
-        return transactionDao.countTransactionsForCategory(categoryId) > 0
+    override suspend fun isCategoryUsed(categoryId: Long): Boolean =
+        transactionDao.countTransactionsForCategory(categoryId) > 0
+
+    override suspend fun getAggregatedAmountByDay(type: TransactionType, startDate: Date, endDate: Date): List<TimeSeriesDataPoint> {
+        return transactionDao.getAggregatedAmountByDay(type, startDate, endDate)
+    }
+
+    override suspend fun getAggregatedAmountByMonth(type: TransactionType, startDate: Date, endDate: Date): List<TimeSeriesDataPoint> {
+        return transactionDao.getAggregatedAmountByMonth(type, startDate, endDate)
     }
 }

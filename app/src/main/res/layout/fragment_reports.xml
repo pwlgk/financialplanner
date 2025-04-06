@@ -7,18 +7,50 @@
     android:padding="16dp"
     tools:context=".ui.reports.ReportsFragment">
 
+    <!-- Выбор периода -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_select_period"
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
         app:icon="@drawable/ic_calendar"
         app:iconGravity="textStart"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btn_export_report"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="01.07.2024 - 31.07.2024" />
 
+    <!-- Кнопка Экспорта (НОВОЕ) -->
+    <ImageButton
+        android:id="@+id/btn_export_report"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/export_report"
+        android:padding="8dp"
+        android:src="@drawable/ic_export"
+        app:layout_constraintBottom_toBottomOf="@id/btn_select_period"
+        app:layout_constraintEnd_toStartOf="@+id/btn_refresh_report"
+        app:layout_constraintTop_toTopOf="@id/btn_select_period"
+        app:tint="?attr/colorControlNormal" />
+
+    <!-- Кнопка Обновления -->
+    <ImageButton
+        android:id="@+id/btn_refresh_report"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/refresh_report"
+        android:padding="8dp"
+        android:src="@drawable/ic_refresh"
+        app:layout_constraintBottom_toBottomOf="@id/btn_select_period"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/btn_select_period"
+        app:tint="?attr/colorControlNormal" />
+
+
+    <!-- Выбор типа отчета -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/til_report_type"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
@@ -29,36 +61,64 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btn_select_period">
+
         <AutoCompleteTextView
             android:id="@+id/actv_report_type"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="none"
-            tools:ignore="LabelFor" />
+            tools:ignore="LabelFor"
+            tools:text="@string/report_expense_by_category" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <com.github.mikephil.charting.charts.PieChart
-        android:id="@+id/pie_chart"
+    <!-- Контейнер для контента отчета (графики ИЛИ список) -->
+    <FrameLayout
+        android:id="@+id/report_content_container"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
-        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/til_report_type" />
+        app:layout_constraintTop_toBottomOf="@id/til_report_type">
 
-    <com.github.mikephil.charting.charts.BarChart
-        android:id="@+id/bar_chart"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="16dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/til_report_type" />
+        <!-- Круговая диаграмма -->
+        <com.github.mikephil.charting.charts.PieChart
+            android:id="@+id/pie_chart"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            tools:visibility="visible" />
 
+        <!-- Столбчатая диаграмма -->
+        <com.github.mikephil.charting.charts.BarChart
+            android:id="@+id/bar_chart"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
+        <!-- Линейный график -->
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/line_chart"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+
+        <!-- Список для деталей отчета (Топ-N, Сравнение) -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_report_details"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="16dp"
+            android:visibility="gone"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:itemCount="6"
+            tools:listitem="@layout/item_report_category_detail" />
+
+    </FrameLayout>
+
+    <!-- Сообщение "Нет данных" -->
     <TextView
         android:id="@+id/tv_no_report_data"
         android:layout_width="wrap_content"
@@ -66,23 +126,24 @@
         android:text="@string/no_data_for_report"
         android:textAppearance="?attr/textAppearanceBody1"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/til_report_type"
+        app:layout_constraintBottom_toBottomOf="@id/report_content_container"
+        app:layout_constraintEnd_toEndOf="@id/report_content_container"
+        app:layout_constraintStart_toStartOf="@id/report_content_container"
+        app:layout_constraintTop_toTopOf="@id/report_content_container"
         app:layout_constraintVertical_bias="0.4"
         tools:visibility="visible" />
 
+    <!-- ProgressBar загрузки -->
     <ProgressBar
         android:id="@+id/progress_bar_reports"
         style="?android:attr/progressBarStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/til_report_type"
+        app:layout_constraintBottom_toBottomOf="@id/report_content_container"
+        app:layout_constraintEnd_toEndOf="@id/report_content_container"
+        app:layout_constraintStart_toStartOf="@id/report_content_container"
+        app:layout_constraintTop_toTopOf="@id/report_content_container"
         app:layout_constraintVertical_bias="0.4"
         tools:visibility="visible" />
 

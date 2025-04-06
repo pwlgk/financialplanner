@@ -153,14 +153,17 @@ class BudgetSetupFragment : Fragment(), BudgetLimitChangeListener {
                     }
 
                     // Обновление данных адаптера
-                    if (!state.isLoading) {
+                    if (!state.isLoading && state.expenseCategories.isNotEmpty()) {
                         val budgetItems = state.expenseCategories.map { cat ->
                             BudgetLimitItem(cat, state.currentLimits[cat.id])
                         }
-                        // Используем submitList для обновления. DiffUtil сам разберется.
+                        // Просто вызываем submitList
                         budgetLimitAdapter.submitList(budgetItems)
-                        // Обновление лимитов в видимых ViewHolder'ах после submitList (если нужно)
-                        // budgetLimitAdapter.updateLimits(state.currentLimits)
+                        adapterDataInitialized = true
+                        Log.d("BudgetSetupFrag", "Adapter list submitted. Count: ${budgetItems.size}")
+                    } else if (!state.isLoading && state.expenseCategories.isEmpty()) {
+                        budgetLimitAdapter.submitList(emptyList())
+                        adapterDataInitialized = true
                     }
 
                     // Обработка ошибок
