@@ -38,7 +38,7 @@
     <string name="current_budget_status">Статус текущего бюджета</string>
     <string name="budget_not_set">Бюджет не задан</string>
     <string name="set_budget">Задать бюджет</string>
-    <string name="overspent_categories_format">Превышено: %d кат.</string>
+    <string name="overspent_categories_format">Превышено: %d</string>
     <string name="recommendation_overspent_category">Внимание! Превышен лимит по категории \'%1$s\'.</string>
     <string name="recommendation_overspent_multiple">Внимание! Превышены лимиты по %1$d категориям.</string>
     <string name="categories">Категории</string>
