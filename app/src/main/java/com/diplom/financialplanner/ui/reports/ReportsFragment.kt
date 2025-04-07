@@ -1,6 +1,7 @@
 package com.diplom.financialplanner.ui.reports
 
 import android.app.Activity // Для ActivityResult
+import android.content.Context
 import android.content.Intent // Для Intent
 import android.graphics.Color
 import android.net.Uri // Для Uri файла
@@ -28,7 +29,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.diplom.financialplanner.R
 import com.diplom.financialplanner.data.database.dao.CategorySpending
 import com.diplom.financialplanner.data.database.dao.TimeSeriesDataPoint
-//import com.diplom.financialplanner.data.model.CategoryComparisonData // Убедитесь, что этот импорт правильный
 import com.diplom.financialplanner.databinding.FragmentReportsBinding
 import com.diplom.financialplanner.ui.adapters.ReportDetailAdapter
 import com.diplom.financialplanner.ui.adapters.ReportDetailItem
@@ -41,25 +41,28 @@ import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.formatter.LargeValueFormatter
 import com.github.mikephil.charting.formatter.PercentFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
+import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.github.mikephil.charting.utils.ColorTemplate
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import java.io.IOException
+import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.abs
 
-// --- ОТЛАДОЧНЫЕ ФЛАГИ ---
-private const val DEBUG_LOGS = true // Установите в false, чтобы отключить подробные логи
+private const val DEBUG_LOGS = false
 private const val DEBUG_TAG = "ReportsFrag_DEBUG"
 
 class ReportsFragment : Fragment() {
 
     private var _binding: FragmentReportsBinding? = null
     private val binding get() = _binding!!
+
 
     private val viewModel: ReportsViewModel by viewModels {
         ReportsViewModel.provideFactory()
@@ -78,6 +81,12 @@ class ReportsFragment : Fragment() {
 
     // Лаунчер для сохранения файла
     private lateinit var createFileLauncher: ActivityResultLauncher<Intent>
+    private val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("ru", "RU")).apply {
+        currency = Currency.getInstance("RUB"); maximumFractionDigits = 2
+    }
+    private val listPercentFormatter: NumberFormat = NumberFormat.getPercentInstance(Locale.getDefault()).apply {
+        maximumFractionDigits = 1
+    }
 
     // --- Lifecycle Methods ---
 
@@ -122,8 +131,9 @@ class ReportsFragment : Fragment() {
         setupDetailRecyclerView()
         setupPeriodButton()
         setupReportTypeDropdown() // Инициализируем дропдаун и адаптер
-        setupRefreshButton()
+        setupRefreshButton() // Кнопка Обновить остается, на случай ручного обновления
         setupExportButton()
+        setupPieChartInteraction()
 
         checkDropdownState("After setupReportTypeDropdown in onViewCreated")
 
@@ -137,22 +147,20 @@ class ReportsFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         debugLog("onResume called")
-        // --- ВАЖНО: Сбрасываем фильтр адаптера при возвращении на экран ---
-        // Это ключевое исправление для бага с AutoCompleteTextView
+
         if (::reportTypeAdapter.isInitialized) {
             debugLog("[onResume] Resetting adapter filter.")
-            // Вызов filter(null) заставляет адаптер показать все элементы
             reportTypeAdapter.filter.filter(null) { count ->
-                // Этот колбэк выполнится асинхронно после фильтрации
                 debugLog("[onResume] Adapter filter reset complete. New filtered count reported by callback: $count")
-                // Проверяем состояние еще раз после сброса фильтра
                 checkDropdownState("After filter reset in onResume (Callback)")
             }
-            // Проверяем состояние немедленно (может показать старый count до завершения фильтрации)
             checkDropdownState("After filter reset call in onResume (Immediate check)")
         } else {
             warnLog("[onResume] reportTypeAdapter not initialized, cannot reset filter.")
         }
+
+        debugLog("[onResume] Triggering data load.")
+        viewModel.loadReportData()
     }
 
 
@@ -178,20 +186,49 @@ class ReportsFragment : Fragment() {
 
     private fun setupPieChart() {
         binding.pieChart.apply {
-            setUsePercentValues(true); description.isEnabled = false; isDrawHoleEnabled = true
-            setHoleColor(Color.TRANSPARENT); holeRadius = 50f; transparentCircleRadius = 55f
-            setDrawCenterText(true); centerText = ""; setCenterTextSize(14f)
+            setUsePercentValues(false) // Используем абсолютные значения для размера секторов
+            description.isEnabled = false
+            legend.isEnabled = false // <-- ЛЕГЕНДА ОТКЛЮЧЕНА
+
+            isDrawHoleEnabled = true // Включаем "пончик"
+            setHoleColor(Color.TRANSPARENT)
+            holeRadius = 65f // Достаточно большое отверстие
+            transparentCircleRadius = 70f
+
+            setDrawCenterText(true) // Включаем текст в центре
+            centerText = "" // Будет обновляться при клике
+            setCenterTextSize(16f) // Крупный текст для названия категории
             setCenterTextColor(getThemeColor(com.google.android.material.R.attr.colorOnSurface))
-            rotationAngle = 270f; isRotationEnabled = true; isHighlightPerTapEnabled = true
-            legend.apply {
-                verticalAlignment = Legend.LegendVerticalAlignment.CENTER; horizontalAlignment = Legend.LegendHorizontalAlignment.RIGHT
-                orientation = Legend.LegendOrientation.VERTICAL; setDrawInside(false); xEntrySpace = 7f; yEntrySpace = 5f
-                yOffset = 0f; textSize = 11f; isWordWrapEnabled = true
-                textColor = getThemeColor(com.google.android.material.R.attr.colorOnSurfaceVariant)
-            }
-            setEntryLabelColor(getThemeColor(com.google.android.material.R.attr.colorOnSurface)); setEntryLabelTextSize(10f)
-            setExtraOffsets(5f, 10f, 40f, 10f)
+
+            rotationAngle = 270f // Начинаем с 9 часов для лучшего вида
+            isRotationEnabled = true
+            isHighlightPerTapEnabled = true // Включаем выделение по тапу
+
+            setDrawEntryLabels(false) // <-- ОТКЛЮЧАЕМ МЕТКИ КАТЕГОРИЙ НА ДИАГРАММЕ
+
+            setExtraOffsets(10f, 10f, 10f, 10f) // Равные небольшие отступы
         }
+    }
+    private fun setupPieChartInteraction() {
+        binding.pieChart.setOnChartValueSelectedListener(object : OnChartValueSelectedListener {
+            override fun onValueSelected(e: Entry?, h: Highlight?) {
+                if (h != null && e is PieEntry) {
+                    val pieEntry = e
+                    val label = pieEntry.label ?: ""
+                    debugLog("PieChart sector selected: Label='$label', Value=${pieEntry.y}")
+                    binding.pieChart.centerText = label // Показываем название категории
+
+                } else {
+                    onNothingSelected()
+                }
+            }
+
+            override fun onNothingSelected() {
+                debugLog("PieChart selection cleared.")
+                binding.pieChart.centerText = "" // Очищаем центр
+                binding.pieChart.highlightValues(null) // Снимаем выделение
+            }
+        })
     }
 
     private fun setupBarChart() {
@@ -264,7 +301,7 @@ class ReportsFragment : Fragment() {
                 debugLog("Dropdown item clicked. Position: $position, Selected Type: $selectedType")
                 if (selectedType != viewModel.uiState.value.selectedReportType) {
                     debugLog("User selected NEW report type via click: $selectedType")
-                    viewModel.setReportType(selectedType)
+                    viewModel.setReportType(selectedType) // ViewModel сама вызовет loadReportData
                 } else {
                     debugLog("User selected the SAME report type: $selectedType")
                 }
@@ -279,13 +316,14 @@ class ReportsFragment : Fragment() {
     private fun setupPeriodButton() {
         binding.btnSelectPeriod.setOnClickListener {
             debugLog("Select period button clicked")
-            showDateRangePicker()
+            showDateRangePicker() // Выбор периода также вызовет loadReportData через ViewModel
         }
     }
 
+    /** Кнопка теперь для ручного обновления, если авто-обновление не сработало или нужно принудительно */
     private fun setupRefreshButton() {
         binding.btnRefreshReport.setOnClickListener {
-            debugLog("Refresh button clicked")
+            debugLog("Manual Refresh button clicked")
             viewModel.loadReportData()
         }
     }
@@ -307,19 +345,14 @@ class ReportsFragment : Fragment() {
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                debugLog("observeViewModel: Starting collection")
                 viewModel.uiState.collect { state ->
-                    debugLog("Observing state: isLoading=${state.isLoading}, noData=${state.noDataAvailable}, type=${state.selectedReportType}, data=${state.reportData::class.simpleName}")
+                    // ... (логирование, обновление контролов) ...
+                    updateControlsState(state) // Обновляет кнопки и общую сумму
 
-                    // 1. Обновляем состояние контролов (кнопки, текст дропдауна)
-                    updateControlsState(state)
-
-                    // 2. Управляем общей видимостью
                     binding.progressBarReports.isVisible = state.isLoading
                     binding.tvNoReportData.isVisible = !state.isLoading && state.noDataAvailable
-                    binding.reportContentContainer.isVisible = !state.isLoading
 
-                    // 3. Отображение контента
+                    // Управление видимостью основного контента
                     if (!state.isLoading && !state.noDataAvailable) {
                         binding.tvNoReportData.visibility = View.GONE
                         showAndPopulateReportView(state.selectedReportType, state.reportData)
@@ -327,11 +360,9 @@ class ReportsFragment : Fragment() {
                         hideAllReportViews()
                         binding.tvNoReportData.text = getString(R.string.no_data_for_report)
                         binding.tvNoReportData.visibility = View.VISIBLE
-                        debugLog("No data available, showing 'no data' message.")
-                    } else { // isLoading == true
+                    } else {
                         hideAllReportViews()
                         binding.tvNoReportData.visibility = View.GONE
-                        debugLog("Data is loading.")
                     }
 
                     // 4. Обработка ошибок
@@ -350,28 +381,54 @@ class ReportsFragment : Fragment() {
 
     /** Обновляет состояние кнопок и ТЕКСТА AutoCompleteTextView. */
     private fun updateControlsState(state: ReportsUiState) {
-        // Обновляем кнопку периода
         updatePeriodButtonText(state)
-        // Блокируем/разблокируем кнопки
         updateControlsEnabled(state.isLoading, state.noDataAvailable)
 
-        // Устанавливаем ТЕКСТ в AutoCompleteTextView
-        val expectedDropdownText = getStringForReportType(state.selectedReportType)
-        val currentText = binding.actvReportType.text?.toString() ?: ""
+        // --- Обновление Текста Общей Суммы ---
+        var totalAmount = 0.0
+        var totalLabelResId = R.string.total_expenses // Значение по умолчанию
+        var showTotal = false // Показывать ли блок общей суммы
 
-        // Устанавливаем текст, только если он отличается
-        if (currentText != expectedDropdownText) {
-            debugLog("UpdateControlsState: Need to set dropdown text to '$expectedDropdownText'. Current: '$currentText'")
-            binding.actvReportType.setText(expectedDropdownText, false) // false - не фильтровать адаптер
-
-            // Сброс фильтра теперь делается в onResume, здесь НЕ НУЖНО
-            // reportTypeAdapter.filter.filter(null)
-            // binding.actvReportType.clearFocus() // Тоже убрал, чтобы не мешать
-
-        } else {
-            debugLog("UpdateControlsState: Dropdown text '$expectedDropdownText' already set.")
+        if (!state.isLoading && !state.noDataAvailable) {
+            showTotal = true // Показываем, если есть данные
+            when (val data = state.reportData) {
+                is ReportData.CategoryReportData -> {
+                    totalAmount = data.items.sumOf { it.totalSpent }
+                    totalLabelResId = if (state.selectedReportType == ReportType.EXPENSE_BY_CATEGORY) R.string.total_expenses else R.string.total_income
+                }
+                is ReportData.IncomeExpenseReportData -> {
+                    totalAmount = data.totalIncome - data.totalExpense // Баланс
+                    totalLabelResId = R.string.balance_for_period
+                }
+                is ReportData.TimeSeriesReportData -> {
+                    totalAmount = data.points.sumOf { it.amount }
+                    totalLabelResId = if (state.selectedReportType == ReportType.EXPENSE_TREND) R.string.total_expenses else R.string.total_income
+                }
+                is ReportData.None -> { showTotal = false }
+            }
         }
-        checkDropdownState("After updateControlsState")
+
+        binding.tvReportTotalAmountLabel.isVisible = showTotal
+        binding.tvReportTotalAmount.isVisible = showTotal
+        if(showTotal) {
+            binding.tvReportTotalAmountLabel.text = getString(totalLabelResId)
+            binding.tvReportTotalAmount.text = currencyFormatter.format(abs(totalAmount))
+            val totalColorAttr = when {
+                state.selectedReportType == ReportType.INCOME_VS_EXPENSE && totalAmount < -0.01 -> com.google.android.material.R.attr.colorError
+                state.selectedReportType == ReportType.INCOME_BY_SOURCE || state.selectedReportType == ReportType.INCOME_TREND -> R.color.colorIncome // Прямой цвет дохода
+                state.selectedReportType == ReportType.EXPENSE_BY_CATEGORY || state.selectedReportType == ReportType.EXPENSE_TREND -> com.google.android.material.R.attr.colorError
+                else -> com.google.android.material.R.attr.colorPrimary
+            }
+            binding.tvReportTotalAmount.setTextColor(getThemeColor(totalColorAttr))
+        }
+
+
+        // --- Обновление Текста Дропдауна ---
+        val expectedDropdownText = getStringForReportType(state.selectedReportType)
+        val currentText = binding.actvReportType.text.toString()
+        if (currentText != expectedDropdownText) {
+            binding.actvReportType.setText(expectedDropdownText, false)
+        }
     }
 
 
@@ -397,15 +454,25 @@ class ReportsFragment : Fragment() {
 
     /** Показывает нужный View для отчета и заполняет его данными. */
     private fun showAndPopulateReportView(reportType: ReportType, reportData: ReportData) {
-        debugLog("showAndPopulateReportView for type: $reportType, data type: ${reportData::class.simpleName}")
         hideAllReportViews()
+
+        // Показываем/скрываем заголовок списка деталей
+        val showDetailsList = reportData is ReportData.CategoryReportData
+        binding.tvDetailsHeader.isVisible = showDetailsList
+        if(showDetailsList) {
+            binding.tvDetailsHeader.text = when(reportType) {
+                ReportType.EXPENSE_BY_CATEGORY -> getString(R.string.details_expenses_by_category)
+                ReportType.INCOME_BY_SOURCE -> getString(R.string.details_income_by_source)
+                else -> "" // Другие типы пока не используют этот список
+            }
+        }
 
         when (reportData) {
             is ReportData.CategoryReportData -> {
                 binding.pieChart.visibility = View.VISIBLE
-                binding.rvReportDetails.visibility = View.VISIBLE
+                binding.rvReportDetails.visibility = View.VISIBLE // Список теперь тоже виден
                 updatePieChartData(reportData.items, reportType)
-                updateTopCategoriesList(reportData.items)
+                updateCategoryDetailList(reportData.items) // Обновляем список
             }
             is ReportData.IncomeExpenseReportData -> {
                 binding.barChart.visibility = View.VISIBLE
@@ -415,29 +482,25 @@ class ReportsFragment : Fragment() {
                 binding.lineChart.visibility = View.VISIBLE
                 updateLineChartData(reportData.points, reportType)
             }
-            is ReportData.ComparisonReportData -> {
-                binding.rvReportDetails.visibility = View.VISIBLE
-                updateComparisonReportUI(reportData)
-            }
             is ReportData.None -> {
-                warnLog("showAndPopulateReportView called with ReportData.None")
                 binding.tvNoReportData.visibility = View.VISIBLE
             }
         }
     }
 
 
+
     /** Скрывает все View, отображающие контент отчета. */
     private fun hideAllReportViews() {
-        binding.pieChart.visibility = View.GONE
-        binding.barChart.visibility = View.GONE
-        binding.lineChart.visibility = View.GONE
-        binding.rvReportDetails.visibility = View.GONE
+        _binding?.pieChart?.visibility = View.GONE
+        _binding?.barChart?.visibility = View.GONE
+        _binding?.lineChart?.visibility = View.GONE
+        _binding?.rvReportDetails?.visibility = View.GONE
+        _binding?.tvDetailsHeader?.visibility = View.GONE // Скрываем и заголовок списка
     }
 
     /** Очищает данные графиков и списка. */
     private fun clearChartsAndList() {
-        // Используем безопасный доступ через _binding?
         _binding?.pieChart?.data = null
         _binding?.pieChart?.invalidate()
         _binding?.barChart?.data = null
@@ -452,41 +515,75 @@ class ReportsFragment : Fragment() {
     }
 
     // --- Chart Data Update Methods ---
-    // (Методы updatePieChartData, updateBarChartData, updateLineChartData без изменений)
     private fun updatePieChartData(data: List<CategorySpending>, reportType: ReportType) {
-        debugLog("Updating PieChart with ${data.size} items for type $reportType")
         val entries = ArrayList<PieEntry>()
-        data.filter { abs(it.totalSpent) >= 0.01 }.forEach {
+        data.forEach {
             entries.add(PieEntry(abs(it.totalSpent).toFloat(), it.categoryName ?: getString(R.string.category_unknown)))
         }
 
-        if (entries.isEmpty()) {
-            debugLog("No valid entries for PieChart, clearing.")
-            clearChartsAndList(); binding.tvNoReportData.visibility = View.VISIBLE
-            return
-        }
-
-        binding.pieChart.centerText = getStringForReportType(reportType)
+        if (entries.isEmpty()) { return }
+        binding.pieChart.centerText = "" // Сброс центра
 
         val dataSet = PieDataSet(entries, "").apply {
-            colors = ColorTemplate.MATERIAL_COLORS.toList() + ColorTemplate.VORDIPLOM_COLORS.toList() + ColorTemplate.JOYFUL_COLORS.toList()
-            sliceSpace = 2f; valueLinePart1OffsetPercentage = 80f; valueLinePart1Length = 0.4f; valueLinePart2Length = 0.4f
-            yValuePosition = PieDataSet.ValuePosition.OUTSIDE_SLICE; valueFormatter = PercentFormatter(binding.pieChart)
-            valueTextSize = 11f; valueTextColor = getThemeColor(com.google.android.material.R.attr.colorOnSurface)
+            colors = generateColorsForCategories(data)
+            sliceSpace = 3f
+            setDrawValues(false)
+            selectionShift = 8f // Выдвижение при клике
         }
 
-        binding.pieChart.data = PieData(dataSet)
-        binding.pieChart.highlightValues(null); binding.pieChart.invalidate(); binding.pieChart.animateY(1000, Easing.EaseInOutQuad)
+        binding.pieChart.data = PieData(dataSet).apply {
+            setDrawValues(false) // Убедимся еще раз
+        }
+        binding.pieChart.legend.isEnabled = false
+        // --- ИСПРАВЛЕНИЕ: Перемещаем вызов сюда ---
+        binding.pieChart.setDrawEntryLabels(false) // <-- Отключаем метки здесь
+
+        binding.pieChart.highlightValues(null)
+        binding.pieChart.invalidate()
+        binding.pieChart.animateY(1000, Easing.EaseOutCubic)
+    }
+
+    /** Генерирует список цветов для PieChart на основе цветов категорий */
+    private fun generateColorsForCategories(categories: List<CategorySpending>): List<Int> {
+        val defaultColors = ColorTemplate.MATERIAL_COLORS.toList() + ColorTemplate.VORDIPLOM_COLORS.toList() + ColorTemplate.JOYFUL_COLORS.toList()
+        val colorList = mutableListOf<Int>()
+        categories.forEachIndexed { index, category ->
+            val color = try {
+                category.colorHex?.let { Color.parseColor(it) }
+            } catch (e: Exception) { null }
+            colorList.add(color ?: defaultColors[index % defaultColors.size])
+        }
+        return colorList
+    }
+    private fun updateCategoryDetailList(data: List<CategorySpending>) {
+
+        val totalAbsoluteAmount = data.sumOf { abs(it.totalSpent) }.takeIf { it > 0.01 }
+
+        val detailItems: List<ReportDetailItem> = data.map { spendingItem ->
+            val percentage = totalAbsoluteAmount?.let { total ->
+                (abs(spendingItem.totalSpent) / total * 100).toFloat()
+            }
+            ReportDetailItem(
+                categoryId = spendingItem.categoryId,
+                categoryName = spendingItem.categoryName ?: getString(R.string.category_unknown),
+                categoryIconResName = spendingItem.iconResName,
+                categoryColorHex = spendingItem.colorHex,
+                currentAmount = spendingItem.totalSpent,
+                transactionCount = spendingItem.transactionCount, // Передаем количество
+                percentage = percentage, // Передаем процент
+                totalAmount = totalAbsoluteAmount // totalAmount нужен для расчета процента в адаптере (хотя мы уже рассчитали)
+            )
+        }
+        reportDetailAdapter.submitList(detailItems)
+        debugLog("Updated category detail list with ${detailItems.size} items.")
     }
 
     private fun updateBarChartData(data: ReportData.IncomeExpenseReportData) {
         debugLog("Updating BarChart: Income=${data.totalIncome}, Expense=${data.totalExpense}")
         val entries = ArrayList<BarEntry>().apply { add(BarEntry(0f, data.totalIncome.toFloat())); add(BarEntry(1f, data.totalExpense.toFloat())) }
         val labels = listOf(getString(R.string.title_income), getString(R.string.title_expenses))
-
         binding.barChart.xAxis.valueFormatter = IndexAxisValueFormatter(labels)
         binding.barChart.xAxis.labelCount = labels.size; binding.barChart.xAxis.isGranularityEnabled = true; binding.barChart.xAxis.granularity = 1f
-
         val dataSet = BarDataSet(entries, "Income vs Expense").apply {
             colors = listOf(ContextCompat.getColor(requireContext(), R.color.colorIncome), ContextCompat.getColor(requireContext(), R.color.colorExpense))
             setDrawValues(true); valueFormatter = LargeValueFormatter(); valueTextSize = 10f; valueTextColor = getThemeColor(com.google.android.material.R.attr.colorOnSurface)
@@ -498,14 +595,11 @@ class ReportsFragment : Fragment() {
     private fun updateLineChartData(points: List<TimeSeriesDataPoint>, reportType: ReportType) {
         debugLog("Updating LineChart with ${points.size} points for type $reportType")
         if (points.isEmpty()) { debugLog("No data points for LineChart, clearing."); clearChartsAndList(); binding.tvNoReportData.visibility = View.VISIBLE; return }
-
         val entries = ArrayList<Entry>()
         points.forEach { entries.add(Entry(it.timestamp.toFloat(), it.amount.toFloat())) }
         entries.sortBy { it.x }
-
         val dataSetLabel = getStringForReportType(reportType)
         val dataSetColor = ContextCompat.getColor(requireContext(), if (reportType == ReportType.EXPENSE_TREND) R.color.colorExpense else R.color.colorIncome)
-
         val lineDataSet = LineDataSet(entries, dataSetLabel).apply {
             color = dataSetColor; setCircleColor(dataSetColor); lineWidth = 2f; circleRadius = 3f; setDrawCircleHole(false)
             valueTextSize = 9f; setDrawFilled(true); fillDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.chart_fade_background)
@@ -518,33 +612,12 @@ class ReportsFragment : Fragment() {
         binding.lineChart.invalidate(); binding.lineChart.animateX(1000)
     }
 
-
     // --- RecyclerView Update Methods ---
 
-    private fun updateComparisonReportUI(data: ReportData.ComparisonReportData) {
-        reportDetailAdapter.setMode(ReportDetailAdapter.Mode.COMPARISON)
-        val detailItems: List<ReportDetailItem> = data.items.mapNotNull { comparisonItem ->
-            if (abs(comparisonItem.currentPeriodAmount) < 0.01 && abs(comparisonItem.previousPeriodAmount) < 0.01) { null }
-            else {
-                ReportDetailItem(
-                    categoryId = comparisonItem.categoryId,
-                    categoryName = comparisonItem.categoryName ?: getString(R.string.category_unknown),
-                    categoryIconResName = comparisonItem.iconResName,
-                    categoryColorHex = comparisonItem.colorHex,
-                    currentAmount = comparisonItem.currentPeriodAmount,
-                    previousAmount = comparisonItem.previousPeriodAmount,
-                    percentage = null, totalAmount = null
-                )
-            }
-        }
-        reportDetailAdapter.submitList(detailItems)
-        debugLog("Updated comparison report recycler view with ${detailItems.size} items.")
-    }
+
 
     private fun updateTopCategoriesList(data: List<CategorySpending>) {
-        reportDetailAdapter.setMode(ReportDetailAdapter.Mode.TOP_SPENDING)
         val totalAbsoluteAmount = data.sumOf { abs(it.totalSpent) }.takeIf { it > 0.01 }
-
         val detailItems: List<ReportDetailItem> = data
             .filter { abs(it.totalSpent) >= 0.01 }
             .map { spendingItem ->
@@ -567,12 +640,8 @@ class ReportsFragment : Fragment() {
     private fun showDateRangePicker() {
         val currentStartDate = viewModel.uiState.value.startDate?.time ?: MaterialDatePicker.thisMonthInUtcMilliseconds()
         val currentEndDate = viewModel.uiState.value.endDate?.time ?: MaterialDatePicker.todayInUtcMilliseconds()
-
         val picker = MaterialDatePicker.Builder.dateRangePicker()
-            .setTitleText(getString(R.string.date_range_picker_title))
-            .setSelection(Pair(currentStartDate, currentEndDate))
-            .build()
-
+            .setTitleText(getString(R.string.date_range_picker_title)).setSelection(Pair(currentStartDate, currentEndDate)).build()
         picker.addOnPositiveButtonClickListener { selection ->
             val startDate = Date(selection.first)
             val endDateCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
@@ -581,7 +650,7 @@ class ReportsFragment : Fragment() {
             }
             val endDate = endDateCalendar.time
             debugLog("Date range selected: $startDate - $endDate")
-            viewModel.setPeriod(startDate, endDate)
+            viewModel.setPeriod(startDate, endDate) // ViewModel вызовет loadReportData
         }
         picker.show(childFragmentManager, "DATE_RANGE_PICKER_TAG")
     }
@@ -593,41 +662,26 @@ class ReportsFragment : Fragment() {
         val sdf = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
         val timestamp = sdf.format(Date())
         val defaultFileName = "financial_report_${typeStr}_$timestamp.csv"
-
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "text/csv"
-            putExtra(Intent.EXTRA_TITLE, defaultFileName)
+            addCategory(Intent.CATEGORY_OPENABLE); type = "text/csv"; putExtra(Intent.EXTRA_TITLE, defaultFileName)
         }
-        try {
-            debugLog("Launching ACTION_CREATE_DOCUMENT with default name: $defaultFileName")
-            createFileLauncher.launch(intent)
-        } catch (e: Exception) {
-            errorLog("Could not launch ACTION_CREATE_DOCUMENT", e)
-            showSnackbar("Не удалось запустить выбор файла: ${e.message}", true)
-        }
+        try { debugLog("Launching ACTION_CREATE_DOCUMENT with default name: $defaultFileName"); createFileLauncher.launch(intent) }
+        catch (e: Exception) { errorLog("Could not launch ACTION_CREATE_DOCUMENT", e); showSnackbar("Не удалось запустить выбор файла: ${e.message}", true) }
     }
 
     private fun writeCsvToFile(uri: Uri) {
         val csvData = viewModel.getCsvDataForCurrentReport()
         if (csvData.isNullOrBlank()) {
             warnLog("CSV data is null or blank, cannot export.")
-            showSnackbar(getString(R.string.report_export_failed) + ": Нет данных для генерации отчета.", true)
-            return
+            showSnackbar(getString(R.string.report_export_failed) + ": Нет данных для генерации отчета.", true); return
         }
-
         try {
             requireContext().contentResolver.openOutputStream(uri)?.use { outputStream ->
-                outputStream.write(byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte())) // BOM for Excel
-                outputStream.write(csvData.toByteArray(Charsets.UTF_8))
-                outputStream.flush()
-                debugLog("CSV data successfully written to $uri")
-                showSnackbar(getString(R.string.report_exported_success))
+                outputStream.write(byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte())) // BOM
+                outputStream.write(csvData.toByteArray(Charsets.UTF_8)); outputStream.flush()
+                debugLog("CSV data successfully written to $uri"); showSnackbar(getString(R.string.report_exported_success))
             } ?: throw IOException("ContentResolver returned null OutputStream for URI: $uri")
-        } catch (e: Exception) {
-            errorLog("Error writing CSV data to $uri", e)
-            showSnackbar(getString(R.string.report_export_failed) + ": ${e.message}", true)
-        }
+        } catch (e: Exception) { errorLog("Error writing CSV data to $uri", e); showSnackbar(getString(R.string.report_export_failed) + ": ${e.message}", true) }
     }
 
     // --- Utility Methods ---
@@ -639,31 +693,41 @@ class ReportsFragment : Fragment() {
             ReportType.INCOME_VS_EXPENSE -> R.string.report_income_vs_expense
             ReportType.EXPENSE_TREND -> R.string.report_expense_trend
             ReportType.INCOME_TREND -> R.string.report_income_trend
-            ReportType.EXPENSE_COMPARISON -> R.string.report_expense_comparison
         }
         return try { getString(resId) }
         catch (e: Exception) { warnLog("Could not find string resource for ReportType: $type", e); type.name }
     }
 
     @ColorInt
-    private fun getThemeColor(attrResId: Int): Int {
-        val typedValue = TypedValue()
-        return if (context?.theme?.resolveAttribute(attrResId, typedValue, true) == true) { // Используем context? для безопасности
-            if (typedValue.type >= TypedValue.TYPE_FIRST_COLOR_INT && typedValue.type <= TypedValue.TYPE_LAST_COLOR_INT) {
-                typedValue.data
-            } else if (typedValue.type == TypedValue.TYPE_REFERENCE && context != null) {
-                try { ContextCompat.getColor(context!!, typedValue.resourceId) } // context!! безопасен здесь
-                catch (e: Exception) { warnLog("Could not resolve theme attr $attrResId resource ID ${typedValue.resourceId} as color.", e); Color.GRAY }
-            } else { warnLog("Theme attr $attrResId resolved to unexpected type: ${typedValue.type}"); Color.GRAY }
-        } else { warnLog("Could not resolve theme attribute: $attrResId"); Color.GRAY }
+    private fun getThemeColor(@AttrRes themeAttrId: Int): Int {
+        val currentContext = context
+        return currentContext?.let { ctx ->
+            val typedValue = TypedValue()
+            if (ctx.theme.resolveAttribute(themeAttrId, typedValue, true)) {
+                if (typedValue.type >= TypedValue.TYPE_FIRST_COLOR_INT && typedValue.type <= TypedValue.TYPE_LAST_COLOR_INT) {
+                    typedValue.data
+                } else if (typedValue.type == TypedValue.TYPE_REFERENCE) {
+                    try { ContextCompat.getColor(ctx, typedValue.resourceId) }
+                    catch (e: Exception) { warnLog("Could not resolve theme attr $themeAttrId resource ID ${typedValue.resourceId} as color.", e); getFallbackThemeColor(ctx) }
+                } else { warnLog("Theme attr $themeAttrId resolved to unexpected type: ${typedValue.type}"); getFallbackThemeColor(ctx) }
+            } else { warnLog("Could not resolve theme attribute: $themeAttrId"); getFallbackThemeColor(ctx) }
+        } ?: run { warnLog("Context was null when trying to resolve theme attribute: $themeAttrId"); Color.GRAY }
     }
 
+    @ColorInt
+    private fun getFallbackThemeColor(context: Context) : Int {
+        val typedValue = TypedValue(); val fallbackAttr = android.R.attr.textColorSecondary
+        return if (context.theme.resolveAttribute(fallbackAttr, typedValue, true)) {
+            if (typedValue.type >= TypedValue.TYPE_FIRST_COLOR_INT && typedValue.type <= TypedValue.TYPE_LAST_COLOR_INT) { typedValue.data }
+            else if (typedValue.type == TypedValue.TYPE_REFERENCE) {
+                try { ContextCompat.getColor(context, typedValue.resourceId) }
+                catch (e: Exception) { warnLog("Could not resolve FALLBACK theme attr $fallbackAttr resource ID ${typedValue.resourceId} as color.", e); Color.GRAY }
+            } else { warnLog("Fallback theme attr $fallbackAttr resolved to unexpected type: ${typedValue.type}"); Color.GRAY }
+        } else { warnLog("Could not resolve FALLBACK theme attribute: $fallbackAttr"); Color.GRAY }
+    }
 
     private fun showSnackbar(message: String, isError: Boolean = false) {
-        if (_binding == null || view == null) {
-            warnLog("Snackbar requested but view is null. Message: $message")
-            return
-        }
+        if (_binding == null || view == null) { warnLog("Snackbar requested but view is null. Message: $message"); return }
         try {
             val snackbar = Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG)
             if (isError) {
@@ -677,24 +741,15 @@ class ReportsFragment : Fragment() {
     // --- ОТЛАДОЧНАЯ ФУНКЦИЯ ---
     private fun checkDropdownState(contextMessage: String) {
         if (!DEBUG_LOGS) return
-        if (_binding == null) {
-            debugLog("[$contextMessage] Check Dropdown State: Binding is NULL")
-            return
-        }
-        // Используем поле класса reportTypeAdapter, если оно инициализировано
+        if (_binding == null) { debugLog("[$contextMessage] Check Dropdown State: Binding is NULL"); return }
         val adapterInstance = if (::reportTypeAdapter.isInitialized) reportTypeAdapter else null
-        val currentAdapterView = binding.actvReportType.adapter // Адаптер, который видит View
-
+        val currentAdapterView = binding.actvReportType.adapter
         val adapterInstanceHashCode = adapterInstance?.hashCode() ?: "null"
         val viewAdapterHashCode = currentAdapterView?.hashCode() ?: "null"
-
-        val filteredCount = currentAdapterView?.count ?: -1 // Текущее количество видимых (отфильтрованных)
-        val originalCount = adapterInstance?.count ?: -2 // Количество в нашем экземпляре адаптера
-
+        val filteredCount = currentAdapterView?.count ?: -1
+        val originalCount = adapterInstance?.count ?: -2
         val currentText = binding.actvReportType.text?.toString() ?: "null"
         val isPopupShowing = binding.actvReportType.isPopupShowing
-
-        // Более подробный лог
         debugLog("[$contextMessage] Check Dropdown State: \n" +
                 "  Adapter Instance Hash = $adapterInstanceHashCode\n" +
                 "  View's Adapter Hash   = $viewAdapterHashCode\n" +
@@ -702,8 +757,6 @@ class ReportsFragment : Fragment() {
                 "  Original Count (Inst) = $originalCount\n" +
                 "  Current Text          = '$currentText'\n" +
                 "  isPopupShowing        = $isPopupShowing")
-
-        // Дополнительная проверка
         if (adapterInstance != null && filteredCount != originalCount && originalCount > 0) {
             warnLog("[$contextMessage] Dropdown adapter IS filtered! Filtered ($filteredCount) != Original ($originalCount)")
         } else if (adapterInstance != null && currentAdapterView != adapterInstance) {
@@ -711,62 +764,9 @@ class ReportsFragment : Fragment() {
         }
     }
 
-
     // --- Вспомогательные функции логирования ---
     private fun debugLog(message: String) { if (DEBUG_LOGS) Log.d(DEBUG_TAG, message) }
     private fun warnLog(message: String, tr: Throwable? = null) { if (DEBUG_LOGS) Log.w(DEBUG_TAG, message, tr) }
     private fun errorLog(message: String, tr: Throwable? = null) { if (DEBUG_LOGS) Log.e(DEBUG_TAG, message, tr) }
 
-} // Конец класса ReportsFragment
-
-
-// --- Убедитесь, что ReportType Enum существует ---
-/*
-package com.diplom.financialplanner.ui.reports // Или где у вас Enum
-
-import androidx.annotation.StringRes
-import com.diplom.financialplanner.R
-
-enum class ReportType(@StringRes val stringResId: Int) {
-    EXPENSE_BY_CATEGORY(R.string.report_expense_by_category),
-    INCOME_BY_SOURCE(R.string.report_income_by_source),
-    INCOME_VS_EXPENSE(R.string.report_income_vs_expense),
-    EXPENSE_TREND(R.string.report_expense_trend),
-    INCOME_TREND(R.string.report_income_trend),
-    EXPENSE_COMPARISON(R.string.report_expense_comparison)
 }
-*/
-
-// --- Убедитесь, что ReportsUiState существует и содержит нужные поля ---
-/*
-package com.diplom.financialplanner.ui.reports // Или где у вас UiState
-
-import java.util.Date
-
-data class ReportsUiState(
-    val isLoading: Boolean = false,
-    val selectedReportType: ReportType = ReportType.EXPENSE_BY_CATEGORY, // Тип отчета по умолчанию
-    val startDate: Date? = null,
-    val endDate: Date? = null,
-    val reportData: ReportData = ReportData.None,
-    val noDataAvailable: Boolean = false, // Флаг, что данных нет (важно!)
-    val errorMessage: String? = null
-)
-*/
-
-// --- Убедитесь, что ReportData sealed interface/class существует ---
-/*
-package com.diplom.financialplanner.ui.reports // Или где у вас ReportData
-
-import com.diplom.financialplanner.data.database.dao.CategorySpending
-import com.diplom.financialplanner.data.database.dao.TimeSeriesDataPoint
-import com.diplom.financialplanner.data.model.CategoryComparisonData
-
-sealed interface ReportData {
-    object None : ReportData // Нет данных или не загружено
-    data class CategoryReportData(val items: List<CategorySpending>) : ReportData // Для круговой диаграммы
-    data class IncomeExpenseReportData(val totalIncome: Double, val totalExpense: Double) : ReportData // Для столбчатой
-    data class TimeSeriesReportData(val points: List<TimeSeriesDataPoint>) : ReportData // Для линейного графика
-    data class ComparisonReportData(val items: List<CategoryComparisonData>) : ReportData // Для сравнения периодов
-}
-*/

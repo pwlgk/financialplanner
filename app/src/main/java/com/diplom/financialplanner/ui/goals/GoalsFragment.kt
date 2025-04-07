@@ -107,7 +107,6 @@ class GoalsFragment : Fragment() {
                     }
                 }
             }
-            // TODO: Можно добавить фон и иконку при свайпе через onChildDraw
         }
         // Прикрепляем хелпер к RecyclerView
         val itemTouchHelper = ItemTouchHelper(itemTouchHelperCallback)

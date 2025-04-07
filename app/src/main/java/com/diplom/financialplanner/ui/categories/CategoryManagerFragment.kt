@@ -48,8 +48,6 @@ class CategoryManagerFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentCategoryManagerBinding.inflate(inflater, container, false)
-        // Можно установить заголовок AppBar здесь или через Navigation Component
-        // (requireActivity() as AppCompatActivity).supportActionBar?.title = getString(R.string.title_categories)
         return binding.root
     }
 
@@ -100,9 +98,7 @@ class CategoryManagerFragment : Fragment() {
         binding.rvCategories.apply {
             adapter = categoryAdapter
             layoutManager = LinearLayoutManager(requireContext())
-            // Можно добавить ItemDecoration для разделителей
         }
-        // TODO: Рассмотреть добавление SwipeToDelete как альтернативу кнопке
     }
 
     /** Настраивает FloatingActionButton для добавления новой категории. */
@@ -128,7 +124,6 @@ class CategoryManagerFragment : Fragment() {
         } else {
             dialogBinding.rbExpense.isChecked = true
         }
-        // TODO: Предзаполнение выбора иконки и цвета
 
         // Установка слушателей для обновления ViewModel при изменении полей
         dialogBinding.etCategoryName.doOnTextChanged { text, _, _, _ -> viewModel.updateInputName(text.toString()) }
@@ -136,7 +131,6 @@ class CategoryManagerFragment : Fragment() {
             val type = if (checkedId == R.id.rb_income) "income" else "expense"
             viewModel.updateInputType(type)
         }
-        // TODO: Слушатели для выбора иконки/цвета
 
         // Создание и показ диалога
         currentDialog = MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_MaterialAlertDialog) // Используем стиль

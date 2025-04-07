@@ -22,17 +22,6 @@ import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.math.abs
 
-// --- ОПРЕДЕЛЕНИЕ DATA CLASS ДЛЯ СРАВНЕНИЯ ---
-/** Модель для сравнения сумм по категориям за два периода, включая атрибуты категории */
-data class CategoryComparisonData(
-    val categoryId: Long,
-    val categoryName: String?,
-    val currentPeriodAmount: Double,
-    val previousPeriodAmount: Double,
-    val iconResName: String?,
-    val colorHex: String?
-)
-// --- КОНЕЦ ОПРЕДЕЛЕНИЯ ---
 
 // Sealed Interface для данных отчетов
 sealed interface ReportData {
@@ -40,7 +29,6 @@ sealed interface ReportData {
     data class CategoryReportData(val items: List<CategorySpending>) : ReportData
     data class IncomeExpenseReportData(val totalIncome: Double, val totalExpense: Double) : ReportData
     data class TimeSeriesReportData(val points: List<TimeSeriesDataPoint>) : ReportData
-    data class ComparisonReportData(val items: List<CategoryComparisonData>, val currentPeriodTotal: Double, val previousPeriodTotal: Double) : ReportData
 }
 
 // Enum для типов отчетов
@@ -50,7 +38,6 @@ enum class ReportType {
     INCOME_VS_EXPENSE,
     EXPENSE_TREND,
     INCOME_TREND,
-    EXPENSE_COMPARISON
 }
 
 // Состояние UI экрана отчетов
@@ -67,7 +54,6 @@ data class ReportsUiState(
 // ViewModel для экрана отчетов
 class ReportsViewModel(
     private val transactionRepository: TransactionRepository,
-    // Добавляем CategoryRepository, если будем получать иконки/цвета для сравнения отдельно
     private val categoryRepository: CategoryRepository,
     private val applicationContext: Context // Добавляем контекст для доступа к строкам
 ) : ViewModel() {
@@ -79,7 +65,6 @@ class ReportsViewModel(
 
     init {
         setDefaultPeriod()
-        // Не загружаем здесь, загрузка инициируется из Фрагмента при первом наблюдении
     }
 
     private fun setDefaultPeriod() {
@@ -166,21 +151,7 @@ class ReportsViewModel(
                         csvBuilder.append(lineSeparator)
                     }
                 }
-                is ReportData.ComparisonReportData -> {
-                    csvBuilder.append("Категория;Текущий период;Предыдущий период;Разница")
-                        .append(lineSeparator)
-                    data.items.forEach { item ->
-                        csvBuilder.append("\"${item.categoryName ?: "Без категории"}\";")
-                        csvBuilder.append("${numberFormatter.format(item.currentPeriodAmount)};")
-                        csvBuilder.append("${numberFormatter.format(item.previousPeriodAmount)};")
-                        csvBuilder.append(numberFormatter.format(item.currentPeriodAmount - item.previousPeriodAmount))
-                        csvBuilder.append(lineSeparator)
-                    }
-                    csvBuilder.append(lineSeparator)
-                    csvBuilder.append("Итого тек.;${numberFormatter.format(data.currentPeriodTotal)}").append(lineSeparator)
-                    csvBuilder.append("Итого пред.;${numberFormatter.format(data.previousPeriodTotal)}").append(lineSeparator)
-                }
-                is ReportData.None -> { return null /* Не должно произойти из-за проверки выше */ }
+                is ReportData.None -> { return null  }
             }
             Log.i("ReportsVM", "CSV data generated successfully for ${currentState.selectedReportType}")
             return csvBuilder.toString()
@@ -200,11 +171,9 @@ class ReportsViewModel(
             ReportType.INCOME_VS_EXPENSE -> R.string.report_income_vs_expense
             ReportType.EXPENSE_TREND -> R.string.report_expense_trend
             ReportType.INCOME_TREND -> R.string.report_income_trend
-            ReportType.EXPENSE_COMPARISON -> R.string.report_expense_comparison
         }
         return try { applicationContext.getString(resId) } catch (e: Exception) { type.name }
     }
-    // --- КОНЕЦ НОВОГО МЕТОДА ---
 
 
 
@@ -234,7 +203,6 @@ class ReportsViewModel(
                     ReportType.INCOME_VS_EXPENSE -> loadIncomeExpenseReport(startDate, endDate)
                     ReportType.EXPENSE_TREND -> loadTimeSeriesReport(TransactionType.EXPENSE, startDate, endDate)
                     ReportType.INCOME_TREND -> loadTimeSeriesReport(TransactionType.INCOME, startDate, endDate)
-                    ReportType.EXPENSE_COMPARISON -> loadComparisonReport(TransactionType.EXPENSE, startDate, endDate)
                 }
                 Log.i("ReportsVM", "Report data loaded successfully: ${newReportData::class.simpleName}")
                 _uiState.update {
@@ -287,75 +255,14 @@ class ReportsViewModel(
         }
         return if (points.isNotEmpty()) ReportData.TimeSeriesReportData(points) else ReportData.None
     }
-    private suspend fun loadComparisonReport(type: TransactionType, currentStartDate: Date, currentEndDate: Date): ReportData {
-        Log.d("ReportsVM", "Loading COMPARISON data for type: $type")
-        val (prevStartDate, prevEndDate) = getPreviousPeriod(currentStartDate, currentEndDate)
-        if (prevStartDate == null || prevEndDate == null) return ReportData.None
-        Log.d("ReportsVM", "Comparison periods: Current=$currentStartDate-$currentEndDate, Previous=$prevStartDate-$prevEndDate")
 
-        return coroutineScope {
-            val currentDataDeferred = async { transactionRepository.getSpendingByCategoryForPeriod(type, currentStartDate, currentEndDate) }
-            val previousDataDeferred = async { transactionRepository.getSpendingByCategoryForPeriod(type, prevStartDate, prevEndDate) }
-            val currentData = currentDataDeferred.await()
-            val previousData = previousDataDeferred.await()
-            Log.d("ReportsVM", "Comparison data fetched: Current=${currentData.size} cats, Previous=${previousData.size} cats")
 
-            val currentTotal = currentData.sumOf { it.totalSpent }
-            val previousTotal = previousData.sumOf { it.totalSpent }
-            if (currentData.isEmpty() && previousData.isEmpty()) return@coroutineScope ReportData.None
 
-            val currentDataMap = currentData.associateBy { it.categoryId }
-            val previousDataMap = previousData.associateBy { it.categoryId }
-            val allCategoryIds = (currentDataMap.keys + previousDataMap.keys).distinct()
-
-            // Используем categoryRepository для получения актуальных данных категорий (если нужно)
-            // val allCategoriesMap = categoryRepository.getAllCategoriesStream().first().associateBy { it.id }
-
-            val comparisonItems = allCategoryIds.mapNotNull { catId ->
-                val currentItem = currentDataMap[catId]
-                val previousItem = previousDataMap[catId]
-                // val categoryDetails = allCategoriesMap[catId] // Получаем детали категории
-
-                // Берем данные из DAO результата, который уже содержит нужные поля
-                val categoryName = currentItem?.categoryName ?: previousItem?.categoryName ?: applicationContext.getString(R.string.category_deleted_placeholder, catId)
-                val iconName = currentItem?.iconResName ?: previousItem?.iconResName
-                val colorHex = currentItem?.colorHex ?: previousItem?.colorHex
-                val currentAmountVal = currentItem?.totalSpent ?: 0.0
-                val previousAmountVal = previousItem?.totalSpent ?: 0.0
-
-                if (currentAmountVal == 0.0 && previousAmountVal == 0.0) null
-                else CategoryComparisonData(catId, categoryName, currentAmountVal, previousAmountVal, iconName, colorHex)
-
-            }.sortedByDescending { abs(it.currentPeriodAmount - it.previousPeriodAmount) }
-
-            Log.d("ReportsVM", "Comparison report generated: ${comparisonItems.size} items")
-            ReportData.ComparisonReportData(comparisonItems, currentTotal, previousTotal)
-        }
-    }
-    // --- Конец функций загрузки ---
-
-    // --- Вспомогательные функции ---
-    private fun getPreviousPeriod(currentStartDate: Date, currentEndDate: Date): Pair<Date?, Date?> {
-        val startCalendar = Calendar.getInstance().apply { time = currentStartDate }
-        val endCalendar = Calendar.getInstance().apply { time = currentEndDate }
-        val diff = currentEndDate.time - currentStartDate.time
-        if (diff <= 0) return Pair(null, null) // Некорректный период
-
-        val prevEndCalendar = Calendar.getInstance().apply { timeInMillis = currentStartDate.time - 1 } // Миллисекунда до начала текущего
-        setTimeEndOfDay(prevEndCalendar) // Устанавливаем конец дня
-
-        val prevStartCalendar = Calendar.getInstance().apply { timeInMillis = prevEndCalendar.timeInMillis - diff }
-        setTimeStartOfDay(prevStartCalendar) // Устанавливаем начало дня
-
-        return Pair(prevStartCalendar.time, prevEndCalendar.time)
-    }
     private fun setTimeStartOfDay(calendar: Calendar) { calendar.set(Calendar.HOUR_OF_DAY, 0); calendar.set(Calendar.MINUTE, 0); calendar.set(Calendar.SECOND, 0); calendar.set(Calendar.MILLISECOND, 0) }
     private fun setTimeEndOfDay(calendar: Calendar) { calendar.set(Calendar.HOUR_OF_DAY, 23); calendar.set(Calendar.MINUTE, 59); calendar.set(Calendar.SECOND, 59); calendar.set(Calendar.MILLISECOND, 999) }
-    // --- Конец вспомогательных функций ---
 
     // --- Методы очистки ---
     fun clearErrorMessage() { _uiState.update { it.copy(errorMessage = null) } }
-    // --- Конец методов очистки ---
 
     /** Фабрика */
     companion object {

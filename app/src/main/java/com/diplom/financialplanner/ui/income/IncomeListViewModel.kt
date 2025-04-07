@@ -72,7 +72,7 @@ class IncomeListViewModel(
         // Проверка, что удаляется именно доход
         if (transaction.type != TransactionType.INCOME) {
             Log.w("IncomeListVM", "Attempted to delete non-income transaction: ID=${transaction.id}")
-            _uiState.update { it.copy(errorMessage = "Ошибка: Попытка удалить не доход.") } // TODO: Ресурс строки
+            _uiState.update { it.copy(errorMessage = "Ошибка: Попытка удалить не доход.") }
             return
         }
 
@@ -81,7 +81,7 @@ class IncomeListViewModel(
                 transactionRepository.deleteTransaction(transaction)
                 Log.i("IncomeListVM", "Income deleted: ID=${transaction.id}")
                 // Отправляем сообщение об успехе (будет показано во фрагменте)
-                _uiState.update { it.copy(userMessage = R.string.income_deleted_success.toString()) } // TODO: Контекст для getString
+                _uiState.update { it.copy(userMessage = R.string.income_deleted_success.toString()) }
             } catch (e: Exception) {
                 // Обрабатываем ошибку удаления
                 handleDeleteError(e, transaction.id)
@@ -92,13 +92,13 @@ class IncomeListViewModel(
     /** Обработчик ошибок загрузки. */
     private fun handleLoadingError(e: Throwable) {
         Log.e("IncomeListVM", "Error loading income list", e)
-        _uiState.update { it.copy(isLoading = false, errorMessage = "Ошибка загрузки доходов: ${e.message}") } // TODO: Ресурс строки
+        _uiState.update { it.copy(isLoading = false, errorMessage = "Ошибка загрузки доходов: ${e.message}") }
     }
 
     /** Обработчик ошибок удаления. */
     private fun handleDeleteError(e: Throwable, id: Long) {
         Log.e("IncomeListVM", "Error deleting income ID=$id", e)
-        _uiState.update { it.copy(errorMessage = "Ошибка удаления дохода: ${e.message}") } // TODO: Ресурс строки
+        _uiState.update { it.copy(errorMessage = "Ошибка удаления дохода: ${e.message}") }
     }
 
 

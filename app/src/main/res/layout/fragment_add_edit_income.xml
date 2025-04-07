@@ -10,9 +10,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp"
-        tools:context=".ui.income.AddEditIncomeFragment"> <!-- Контекст -->
+        tools:context=".ui.income.AddEditIncomeFragment">
 
-        <!-- Поля идентичны, т.к. используем общую структуру -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/til_amount"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"

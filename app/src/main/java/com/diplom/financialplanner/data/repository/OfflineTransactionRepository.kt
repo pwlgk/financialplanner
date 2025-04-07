@@ -1,5 +1,7 @@
 package com.diplom.financialplanner.data.repository
 
+import android.content.Context
+import com.diplom.financialplanner.R
 import com.diplom.financialplanner.data.database.dao.CategorySpending
 import com.diplom.financialplanner.data.database.dao.TimeSeriesDataPoint
 import com.diplom.financialplanner.data.database.dao.TransactionDao
@@ -9,7 +11,7 @@ import com.diplom.financialplanner.data.model.TransactionWithCategory
 import kotlinx.coroutines.flow.Flow
 import java.util.Date
 
-class OfflineTransactionRepository(private val transactionDao: TransactionDao) : TransactionRepository {
+class OfflineTransactionRepository(private val transactionDao: TransactionDao, private val context: Context) : TransactionRepository {
 
     override fun getTransactionsWithCategoryByTypeStream(type: TransactionType): Flow<List<TransactionWithCategory>> =
         transactionDao.getTransactionsWithCategoryByType(type)
@@ -35,9 +37,16 @@ class OfflineTransactionRepository(private val transactionDao: TransactionDao) :
     override suspend fun getTotalAmountByTypeAndDate(type: TransactionType, startDate: Date, endDate: Date): Double? =
         transactionDao.getTotalAmountByTypeAndDate(type, startDate, endDate)
 
-    override suspend fun getSpendingByCategoryForPeriod(type: TransactionType, startDate: Date, endDate: Date): List<CategorySpending> =
-        transactionDao.getSpendingByCategoryForPeriod(type, startDate, endDate)
-
+    override suspend fun getSpendingByCategoryForPeriod(
+        type: TransactionType,
+        startDate: Date,
+        endDate: Date
+    ): List<CategorySpending> {
+        // Получаем строку для неизвестной категории из ресурсов
+        val unknownCategoryString = context.getString(R.string.category_deleted_placeholder_prefix) ?: "Категория #" // Запасной вариант
+        // Передаем строку в метод DAO
+        return transactionDao.getSpendingByCategoryForPeriod(type, startDate, endDate, unknownCategoryString)
+    }
     override suspend fun isCategoryUsed(categoryId: Long): Boolean =
         transactionDao.countTransactionsForCategory(categoryId) > 0
 

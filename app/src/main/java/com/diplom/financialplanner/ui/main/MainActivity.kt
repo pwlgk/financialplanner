@@ -27,19 +27,17 @@ class MainActivity : AppCompatActivity() {
 
         val navView: BottomNavigationView = binding.navView
 
-        // --- ИЗМЕНЕННЫЙ СПОСОБ ПОЛУЧЕНИЯ NavController ---
         // 1. Находим NavHostFragment по ID из layout'а
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment_activity_main) as NavHostFragment
         // 2. Получаем NavController из NavHostFragment
         navController = navHostFragment.navController
-        // ----------------------------------------------------
 
-        // Конфигурация AppBar (оставляем как было, но проверяем ID)
+        // Конфигурация AppBar
         val appBarConfiguration = AppBarConfiguration(
             setOf(
                 R.id.navigation_dashboard, R.id.navigation_expenses, R.id.navigation_income,
-                R.id.navigation_budget, R.id.navigation_reports // Убедитесь, что здесь нет navigation_goals
+                R.id.navigation_budget, R.id.navigation_reports
             )
         )
 

@@ -70,9 +70,6 @@ class BudgetProgressAdapter : ListAdapter<BudgetCategoryProgress, BudgetProgress
             }
             binding.progressBarCategory.progressTintList = ColorStateList.valueOf(progressColor)
 
-            // Опционально: Отображение остатка
-            // val remaining = (limit - spent).coerceAtLeast(0.0)
-            // binding.tvRemaining.text = context.getString(R.string.remaining_format, formatter.format(remaining))
         }
     }
 

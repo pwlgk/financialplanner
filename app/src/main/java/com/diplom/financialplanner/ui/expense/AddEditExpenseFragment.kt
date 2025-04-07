@@ -129,8 +129,6 @@ class AddEditExpenseFragment : Fragment() {
             },
             year, month, day
         )
-        // Можно установить максимальную дату (например, сегодня)
-        // datePickerDialog.datePicker.maxDate = System.currentTimeMillis()
         datePickerDialog.show()
     }
 
@@ -186,7 +184,6 @@ class AddEditExpenseFragment : Fragment() {
                         val categoryNames = categoriesList.map { it.name }
                         categoryAdapter.clear()
                         categoryAdapter.addAll(categoryNames)
-                        //categoryAdapter.notifyDataSetChanged() // Важно для обновления AutoCompleteTextView
 
                         // Восстановление выбранной категории после загрузки или при пересоздании
                         if (initialDataSet || !state.isLoading) { // Делаем это после установки initialDataSet или если загрузка завершена

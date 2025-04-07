@@ -4,10 +4,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
+    android:paddingStart="16dp"
+    android:paddingTop="16dp"
+    android:paddingEnd="16dp"
     tools:context=".ui.reports.ReportsFragment">
 
-    <!-- Выбор периода -->
+    <!-- Верхние элементы управления -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_select_period"
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
@@ -21,7 +23,6 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:text="01.07.2024 - 31.07.2024" />
 
-    <!-- Кнопка Экспорта (НОВОЕ) -->
     <ImageButton
         android:id="@+id/btn_export_report"
         android:layout_width="wrap_content"
@@ -35,7 +36,6 @@
         app:layout_constraintTop_toTopOf="@id/btn_select_period"
         app:tint="?attr/colorControlNormal" />
 
-    <!-- Кнопка Обновления -->
     <ImageButton
         android:id="@+id/btn_refresh_report"
         android:layout_width="wrap_content"
@@ -49,8 +49,6 @@
         app:layout_constraintTop_toTopOf="@id/btn_select_period"
         app:tint="?attr/colorControlNormal" />
 
-
-    <!-- Выбор типа отчета -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/til_report_type"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
@@ -71,54 +69,103 @@
             tools:text="@string/report_expense_by_category" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Контейнер для контента отчета (графики ИЛИ список) -->
-    <FrameLayout
-        android:id="@+id/report_content_container"
+    <!-- Общая Сумма -->
+    <TextView
+        android:id="@+id/tv_report_total_amount_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:textAppearance="?attr/textAppearanceBody1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/til_report_type"
+        tools:text="Общие расходы:" />
+
+    <TextView
+        android:id="@+id/tv_report_total_amount"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:gravity="end"
+        android:textAppearance="?attr/textAppearanceHeadline5"
+        android:textColor="?attr/colorPrimary"
+        android:textStyle="bold"
+        app:layout_constraintBaseline_toBaselineOf="@id/tv_report_total_amount_label"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/tv_report_total_amount_label"
+        tools:text="55 000,00 ₽" />
+
+    <!-- Круговая диаграмма "Пончик" -->
+    <com.github.mikephil.charting.charts.PieChart
+        android:id="@+id/pie_chart"
+        android:layout_width="0dp"
+        android:layout_height="200dp"
+        android:layout_marginTop="8dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_report_total_amount_label"
+        tools:visibility="visible" />
+
+    <!-- Столбчатая диаграмма (скрыта) -->
+    <com.github.mikephil.charting.charts.BarChart
+        android:id="@+id/bar_chart"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/til_report_type">
+        app:layout_constraintTop_toBottomOf="@id/tv_report_total_amount_label" />
 
-        <!-- Круговая диаграмма -->
-        <com.github.mikephil.charting.charts.PieChart
-            android:id="@+id/pie_chart"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone"
-            tools:visibility="visible" />
+    <!-- Линейный график (скрыт) -->
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/line_chart"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_report_total_amount_label" />
 
-        <!-- Столбчатая диаграмма -->
-        <com.github.mikephil.charting.charts.BarChart
-            android:id="@+id/bar_chart"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone" />
 
-        <!-- Линейный график -->
-        <com.github.mikephil.charting.charts.LineChart
-            android:id="@+id/line_chart"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone" />
+    <!-- Заголовок для списка категорий -->
+    <TextView
+        android:id="@+id/tv_details_header"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textAppearance="?attr/textAppearanceSubtitle1"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/pie_chart"
+        tools:text="Детализация Расходов"
+        tools:visibility="visible" />
 
-        <!-- Список для деталей отчета (Топ-N, Сравнение) -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rv_report_details"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:paddingBottom="16dp"
-            android:visibility="gone"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            tools:itemCount="6"
-            tools:listitem="@layout/item_report_category_detail" />
+    <!-- Список деталей/категорий (под заголовком) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_report_details"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:clipToPadding="false"
+        android:paddingBottom="16dp"
+        android:visibility="gone"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_details_header"
+        tools:itemCount="6"
+        tools:listitem="@layout/item_report_category_detail"
+        tools:visibility="visible" />
 
-    </FrameLayout>
 
-    <!-- Сообщение "Нет данных" -->
+    <!-- Сообщение "Нет данных" (выровнено по центру области контента) -->
     <TextView
         android:id="@+id/tv_no_report_data"
         android:layout_width="wrap_content"
@@ -126,10 +173,10 @@
         android:text="@string/no_data_for_report"
         android:textAppearance="?attr/textAppearanceBody1"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@id/report_content_container"
-        app:layout_constraintEnd_toEndOf="@id/report_content_container"
-        app:layout_constraintStart_toStartOf="@id/report_content_container"
-        app:layout_constraintTop_toTopOf="@id/report_content_container"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/til_report_type"
         app:layout_constraintVertical_bias="0.4"
         tools:visibility="visible" />
 
@@ -140,10 +187,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@id/report_content_container"
-        app:layout_constraintEnd_toEndOf="@id/report_content_container"
-        app:layout_constraintStart_toStartOf="@id/report_content_container"
-        app:layout_constraintTop_toTopOf="@id/report_content_container"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/til_report_type"
         app:layout_constraintVertical_bias="0.4"
         tools:visibility="visible" />
 

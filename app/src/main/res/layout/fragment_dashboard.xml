@@ -26,7 +26,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardElevation="4dp">
-                <!-- ConstraintLayout внутри карточки остается как есть -->
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -335,7 +334,7 @@
 
             </LinearLayout>
 
-            <!-- ProgressBar для всего экрана (перемещен внутрь LinearLayout для центрирования) -->
+            <!-- ProgressBar для всего экрана  -->
             <ProgressBar
                 android:id="@+id/progress_bar_dashboard"
                 style="?android:attr/progressBarStyle"

@@ -100,7 +100,7 @@
             </LinearLayout>
 
 
-            <!-- Разделитель (Теперь всегда ниже предыдущих секций) -->
+            <!-- Разделитель -->
             <View
                 android:id="@+id/divider"
                 android:layout_width="match_parent"
@@ -161,10 +161,9 @@
             </LinearLayout>
 
 
-        </LinearLayout> <!-- Конец основного LinearLayout -->
+        </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- FAB остается снаружи ScrollView -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_add_budget"
         android:layout_width="wrap_content"

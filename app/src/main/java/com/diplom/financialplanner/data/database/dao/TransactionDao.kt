@@ -15,12 +15,12 @@ import java.util.Date
 
 // --- МОДЕЛИ ДАННЫХ ДЛЯ ОТЧЕТОВ ---
 
-/** Модель данных для результата запроса суммы по категориям с атрибутами категории. */
+/** Модель данных для результата запроса суммы И КОЛИЧЕСТВА по категориям с атрибутами категории. */
 data class CategorySpending(
     val categoryId: Long,
     val categoryName: String?,
     val totalSpent: Double,
-    // Поля для иконки и цвета добавлены
+    val transactionCount: Int,
     val iconResName: String?,
     val colorHex: String?
 )
@@ -31,14 +31,11 @@ data class TimeSeriesDataPoint(
     val amount: Double   // Сумма за этот момент времени
 )
 
-// Модель CategoryComparisonData теперь определена в ReportsViewModel.kt
-
-// ---------------------------------
 
 @Dao
 interface TransactionDao {
 
-    // --- CRUD Операции ---
+    // --- CRUD Операции (без изменений) ---
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTransaction(transaction: TransactionEntity): Long
     @Update
@@ -49,7 +46,7 @@ interface TransactionDao {
     suspend fun getTransactionById(id: Long): TransactionEntity?
     // --- Конец CRUD ---
 
-    // --- Основные Потоки Данных ---
+    // --- Основные Потоки Данных (без изменений) ---
     @Transaction
     @Query("SELECT * FROM transactions WHERE type = :type ORDER BY date DESC")
     fun getTransactionsWithCategoryByType(type: TransactionType): Flow<List<TransactionWithCategory>>
@@ -66,21 +63,27 @@ interface TransactionDao {
     @Query("SELECT SUM(amount) FROM transactions WHERE type = :type AND date BETWEEN :startDate AND :endDate")
     suspend fun getTotalAmountByTypeAndDate(type: TransactionType, startDate: Date, endDate: Date): Double?
 
-    /** Рассчитывает суммы по категориям за период, ВКЛЮЧАЯ атрибуты категории. */
+    /** Рассчитывает суммы И КОЛИЧЕСТВО по категориям за период, ВКЛЮЧАЯ атрибуты категории. */
     @Query("""
         SELECT
             t.category_id as categoryId,
-            COALESCE(c.name, 'Категория #' || t.category_id) as categoryName,
+            COALESCE(c.name, :unknownCategoryName || t.category_id) as categoryName, -- Используем плейсхолдер
             SUM(t.amount) as totalSpent,
+            COUNT(t.id) as transactionCount, -- <-- Считаем количество
             c.icon_res_name as iconResName,
             c.color_hex as colorHex
         FROM transactions t
         LEFT JOIN categories c ON t.category_id = c.id
         WHERE t.type = :type AND t.date BETWEEN :startDate AND :endDate AND t.category_id IS NOT NULL
-        GROUP BY t.category_id, categoryName, iconResName, colorHex
+        GROUP BY t.category_id -- Группируем по ID категории
         ORDER BY totalSpent DESC
     """)
-    suspend fun getSpendingByCategoryForPeriod(type: TransactionType, startDate: Date, endDate: Date): List<CategorySpending> // Возвращаемый тип включает иконку/цвет
+    suspend fun getSpendingByCategoryForPeriod(
+        type: TransactionType,
+        startDate: Date,
+        endDate: Date,
+        unknownCategoryName: String // Передаем строку для неизвестной категории
+    ): List<CategorySpending> // Возвращаемый тип теперь включает transactionCount
 
     /** Получает суммы, сгруппированные по ДНЯМ. */
     @Query("""

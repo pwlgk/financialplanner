@@ -20,7 +20,7 @@ class FinancialPlannerApplication : Application() {
 
     /** Контейнер зависимостей. */
     lateinit var container: AppContainer
-        private set // Делаем сеттер приватным, чтобы нельзя было изменить контейнер извне
+        private set
 
     override fun onCreate() {
         super.onCreate()
@@ -54,7 +54,7 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
     // Ленивая инициализация репозиториев
     override val transactionRepository: TransactionRepository by lazy {
         Log.d("AppContainer", "Creating TransactionRepository instance")
-        OfflineTransactionRepository(database.transactionDao())
+        OfflineTransactionRepository(database.transactionDao(), context)
     }
 
     override val categoryRepository: CategoryRepository by lazy {
@@ -67,8 +67,8 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
         Log.d("AppContainer", "Creating BudgetRepository instance")
         OfflineBudgetRepository(
             budgetDao = database.budgetDao(),
-            categoryRepository = categoryRepository, // Зависимость от CategoryRepository
-            transactionRepository = transactionRepository // <--- ИСПРАВЛЕНО: Передаем TransactionRepository
+            categoryRepository = categoryRepository,
+            transactionRepository = transactionRepository
         )
     }
 

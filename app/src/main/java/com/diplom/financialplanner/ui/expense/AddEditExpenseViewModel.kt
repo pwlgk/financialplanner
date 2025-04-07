@@ -181,7 +181,6 @@ class AddEditExpenseViewModel(
 
     /** Вспомогательная функция для форматирования суммы для поля ввода. */
     private fun formatAmountForInput(amount: Double): String {
-        // Просто конвертируем в строку, Locale/DecimalFormat могут внести сложности
         return amount.toString()
     }
 

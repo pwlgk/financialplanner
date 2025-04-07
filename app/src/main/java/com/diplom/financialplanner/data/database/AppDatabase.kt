@@ -30,8 +30,8 @@ import kotlinx.coroutines.launch
         BudgetCategoryLimitEntity::class,
         FinancialGoalEntity::class
     ],
-    version = 4, // ТЕКУЩАЯ ВЕРСИЯ БАЗЫ ДАННЫХ
-    exportSchema = false // Отключаем экспорт схемы для упрощения
+    version = 4,
+    exportSchema = false
 )
 @TypeConverters(DateConverter::class) // Регистрируем конвертер для типа Date
 abstract class AppDatabase : RoomDatabase() {
@@ -99,8 +99,6 @@ abstract class AppDatabase : RoomDatabase() {
                         `creation_date` INTEGER NOT NULL
                     )
                 """)
-                // Можно добавить индексы при необходимости
-                // db.execSQL("CREATE INDEX index_financial_goals_name ON financial_goals(name)")
             }
         }
 
@@ -129,7 +127,6 @@ abstract class AppDatabase : RoomDatabase() {
                         Log.i("AppDatabaseCallback", "Database created. Populating with initial categories...")
                         val categoryDao = database.categoryDao()
                         // Вставляем стандартные категории (примеры)
-                        // Убедитесь, что ресурсы drawable с именами ic_category_* существуют!
                         // Расходы
                         categoryDao.insertCategory(CategoryEntity(name = "Еда", type = "expense", iconResName = "ic_category_food", colorHex = "#FF7043"))
                         categoryDao.insertCategory(CategoryEntity(name = "Транспорт", type = "expense", iconResName = "ic_category_transport", colorHex = "#5C6BC0"))
@@ -152,8 +149,6 @@ abstract class AppDatabase : RoomDatabase() {
             override fun onOpen(db: SupportSQLiteDatabase) {
                 super.onOpen(db)
                 Log.d("AppDatabaseCallback", "Database opened.")
-                // Можно включить WAL режим для лучшей производительности записи
-                // db.enableWriteAheadLogging()
             }
         }
 
@@ -172,12 +167,9 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,    // Класс базы данных
                     "financial_planner_db"      // Имя файла базы данных
                 )
-                    // --- Выберите ОДИН из следующих вариантов обработки изменений схемы ---
-                    // Вариант 1: Добавить все миграции по порядку
                     .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
 
                     .addCallback(roomCallback) // Добавляем Callback для предзаполнения
-                    // .allowMainThreadQueries() // НЕ РЕКОМЕНДУЕТСЯ: разрешает запросы в UI потоке
                     .build() // Строим экземпляр базы данных
                 INSTANCE = instance // Сохраняем созданный экземпляр
                 instance // Возвращаем созданный экземпляр

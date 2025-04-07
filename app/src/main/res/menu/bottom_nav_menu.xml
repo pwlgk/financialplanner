@@ -26,12 +26,5 @@
         android:icon="@drawable/ic_reports"
         android:title="@string/title_reports" />
 
-    <!-- Удаляем или комментируем этот пункт -->
-    <!--
-     <item
-        android:id="@+id/navigation_goals"
-        android:icon="@drawable/ic_flag"
-        android:title="@string/title_goals" />
-     -->
 
 </menu>

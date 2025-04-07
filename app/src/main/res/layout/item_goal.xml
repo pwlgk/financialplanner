@@ -17,9 +17,6 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
 
-        <!-- Иконка цели (опционально, можно добавить слева) -->
-        <!-- <ImageView android:id="@+id/iv_goal_icon" ... /> -->
-
         <!-- Название цели -->
         <TextView
             android:id="@+id/tv_goal_name"

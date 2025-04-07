@@ -97,7 +97,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/til_description" />
 
-        <!-- ProgressBar (опционально) -->
+        <!-- ProgressBar  -->
         <ProgressBar
             android:id="@+id/progress_bar_save"
             style="?android:attr/progressBarStyle"

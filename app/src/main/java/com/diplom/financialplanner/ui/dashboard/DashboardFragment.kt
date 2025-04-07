@@ -65,7 +65,7 @@ class DashboardFragment : Fragment() {
         setupRecyclerView()
         setupQuickActionButtons()
         setupBudgetCardListeners()
-        setupNavigationButtons() // Используем новый метод
+        setupNavigationButtons()
         observeViewModel()
     }
 
@@ -139,7 +139,7 @@ class DashboardFragment : Fragment() {
                     titleArg = getString(R.string.add_expense_title)
                 )
                 findNavController().navigate(action)
-            } catch (e: Exception) { handleNavigationError(e, getString(R.string.add_expense)) } // Контекст
+            } catch (e: Exception) { handleNavigationError(e, getString(R.string.add_expense)) }
         }
         binding.btnQuickAddIncome.setOnClickListener {
             try {
@@ -148,7 +148,7 @@ class DashboardFragment : Fragment() {
                     titleArg = getString(R.string.add_income_title)
                 )
                 findNavController().navigate(action)
-            } catch (e: Exception) { handleNavigationError(e, getString(R.string.add_income)) } // Контекст
+            } catch (e: Exception) { handleNavigationError(e, getString(R.string.add_income)) }
         }
     }
 
@@ -162,22 +162,21 @@ class DashboardFragment : Fragment() {
                     budgetId = 0L
                 )
                 findNavController().navigate(action)
-            } catch (e: Exception) { handleNavigationError(e, getString(R.string.budget_setup_title)) } // Контекст
+            } catch (e: Exception) { handleNavigationError(e, getString(R.string.budget_setup_title)) }
         }
     }
 
     /** Настраивает кнопки навигации к Категориям и Целям. */
-    private fun setupNavigationButtons() { // Переименованный метод
+    private fun setupNavigationButtons() {
         binding.btnManageCategories.setOnClickListener {
             try {
                 findNavController().navigate(R.id.action_dashboard_to_categories)
-            } catch (e: Exception) { handleNavigationError(e, getString(R.string.title_categories)) } // Контекст
+            } catch (e: Exception) { handleNavigationError(e, getString(R.string.title_categories)) }
         }
-        // ДОБАВЛЕН ОБРАБОТЧИК ДЛЯ ЦЕЛЕЙ
         binding.btnGoToGoals.setOnClickListener {
             try {
                 findNavController().navigate(R.id.action_dashboard_to_goals) // Используем action ID
-            } catch (e: Exception) { handleNavigationError(e, getString(R.string.title_goals)) } // Контекст
+            } catch (e: Exception) { handleNavigationError(e, getString(R.string.title_goals)) }
         }
     }
 

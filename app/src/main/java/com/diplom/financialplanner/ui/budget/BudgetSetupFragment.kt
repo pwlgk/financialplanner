@@ -100,8 +100,6 @@ class BudgetSetupFragment : Fragment(), BudgetLimitChangeListener {
         val datePicker = MaterialDatePicker.Builder.datePicker()
             .setTitleText(getString(R.string.select_budget_period))
             .setSelection(currentSelection)
-            // TODO: Рассмотреть MonthPicker, если он доступен и подходит
-            // .setCalendarConstraints(...) можно добавить для ограничения выбора
             .build()
 
         datePicker.addOnPositiveButtonClickListener { selection ->

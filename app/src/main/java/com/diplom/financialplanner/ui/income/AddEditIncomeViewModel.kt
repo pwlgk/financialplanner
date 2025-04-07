@@ -95,7 +95,7 @@ class AddEditIncomeViewModel(
                     }
                 } else {
                     Log.e("AddEditIncomeVM", "Income transaction with ID $id not found or wrong type.")
-                    _uiState.update { it.copy(isLoading = false, errorMessage = "Доход не найден.") } // TODO: Ресурс строки
+                    _uiState.update { it.copy(isLoading = false, errorMessage = "Доход не найден.") }
                 }
             } catch (e: Exception) { handleLoadingError(e, "деталей дохода") }
         }
@@ -109,7 +109,6 @@ class AddEditIncomeViewModel(
         selectedDate = date
         _uiState.update { it.copy(initialDate = date) }
     }
-    // -------------------------------------
 
     /** Сохраняет доход (новый или измененный). */
     fun saveIncome() {
@@ -118,12 +117,12 @@ class AddEditIncomeViewModel(
 
         // --- Валидация ---
         if (amountDouble == null || amountDouble <= 0) {
-            _uiState.update { it.copy(errorMessage = R.string.error_amount_invalid.toString()) } // TODO: Context
+            _uiState.update { it.copy(errorMessage = R.string.error_amount_invalid.toString()) }
             return
         }
         if (currentState.categoryId == null) {
             // Используем ту же строку ошибки, что и для расходов
-            _uiState.update { it.copy(errorMessage = R.string.error_category_required.toString()) } // TODO: Context
+            _uiState.update { it.copy(errorMessage = R.string.error_category_required.toString()) }
             return
         }
         // --- Конец валидации ---
@@ -152,7 +151,7 @@ class AddEditIncomeViewModel(
                 _uiState.update { it.copy(isSaving = false, saveSuccess = true) }
             } catch (e: Exception) {
                 Log.e("AddEditIncomeVM", "Error saving income", e)
-                _uiState.update { it.copy(isSaving = false, errorMessage = "Ошибка сохранения дохода: ${e.message}") } // TODO: Ресурс строки
+                _uiState.update { it.copy(isSaving = false, errorMessage = "Ошибка сохранения дохода: ${e.message}") }
             }
         }
     }
@@ -160,7 +159,7 @@ class AddEditIncomeViewModel(
     /** Обработчик ошибок загрузки. */
     private fun handleLoadingError(e: Throwable, context: String) {
         Log.e("AddEditIncomeVM", "Error loading $context", e)
-        _uiState.update { it.copy(isLoading = false, errorMessage = "Ошибка загрузки $context: ${e.message}") } // TODO: Ресурс строки
+        _uiState.update { it.copy(isLoading = false, errorMessage = "Ошибка загрузки $context: ${e.message}") }
     }
 
     /** Вспомогательная функция для парсинга суммы. */

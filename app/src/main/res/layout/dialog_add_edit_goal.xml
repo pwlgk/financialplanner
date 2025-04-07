@@ -7,7 +7,7 @@
     android:orientation="vertical"
     android:paddingHorizontal="24dp"
     android:paddingTop="20dp"
-    android:paddingBottom="10dp"> <!-- Уменьшен нижний padding -->
+    android:paddingBottom="10dp">
 
     <!-- Название цели -->
     <com.google.android.material.textfield.TextInputLayout
@@ -43,7 +43,7 @@
             android:maxLines="1" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Текущая сумма (видимость управляется из кода) -->
+    <!-- Текущая сумма  -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/til_goal_current_amount"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"

@@ -61,7 +61,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_limits_label"
             tools:itemCount="5"
-            tools:listitem="@layout/item_budget_category_limit" /> <!-- Добавлен itemCount для предпросмотра -->
+            tools:listitem="@layout/item_budget_category_limit" />
 
         <!-- Текст, если нет категорий расходов -->
         <TextView

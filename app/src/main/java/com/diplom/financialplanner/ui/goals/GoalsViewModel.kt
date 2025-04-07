@@ -34,8 +34,6 @@ data class GoalInputState(
  */
 class GoalsViewModel(
     private val goalRepository: FinancialGoalRepository,
-    // savedStateHandle может понадобиться, если редактирование будет на отдельном экране
-    // private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(GoalsUiState())
@@ -91,7 +89,6 @@ class GoalsViewModel(
     fun updateGoalName(name: String) { _goalInputState.update { it.copy(name = name) } }
     fun updateTargetAmount(amount: String) { _goalInputState.update { it.copy(targetAmount = amount) } }
     fun updateCurrentAmountInput(amount: String) { _goalInputState.update { it.copy(currentAmount = amount) } }
-    // -------------------------------------------------
 
     /** Сохраняет цель (новую или измененную). */
     fun saveGoal() {
@@ -211,7 +208,6 @@ class GoalsViewModel(
                 val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as FinancialPlannerApplication)
                 GoalsViewModel(
                     application.container.financialGoalRepository
-                    // createSavedStateHandle() // Раскомментировать, если понадобится SavedStateHandle
                 )
             }
         }

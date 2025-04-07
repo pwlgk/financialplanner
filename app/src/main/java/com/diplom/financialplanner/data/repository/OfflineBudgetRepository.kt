@@ -54,7 +54,6 @@ class OfflineBudgetRepository(
         budgetDao.deleteBudget(budget)
     }
 
-    // --- РЕАКТИВНАЯ ВЕРСИЯ ПОЛУЧЕНИЯ ПРОГРЕССА ---
     override fun getCurrentBudgetProgress(date: Date): Flow<List<BudgetCategoryProgress>> {
         return budgetDao.getCurrentBudgetWithLimits(date)
             .flatMapLatest { budgetWithLimits: BudgetWithLimits? -> // Явно указываем тип budgetWithLimits
@@ -121,7 +120,6 @@ class OfflineBudgetRepository(
                 emit(emptyList()) // Возвращаем пустой список при ошибке
             }
     }
-    // --- КОНЕЦ РЕАКТИВНОЙ ВЕРСИИ ---
 
     override suspend fun isCategoryUsedInBudgets(categoryId: Long): Boolean {
         return budgetDao.countLimitsForCategory(categoryId) > 0

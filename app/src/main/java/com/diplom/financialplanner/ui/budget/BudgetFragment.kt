@@ -123,7 +123,6 @@ class BudgetFragment : Fragment() {
                     // Используем LinearLayout ID, если используется layout с LinearLayout
                     binding.layoutCurrentBudgetSection?.isVisible = shouldShowCurrentBudget
                     binding.layoutNoBudgetSection?.isVisible = shouldShowNoBudget
-                    // ИЛИ Используем Group ID, если используется layout с Group
 
                     // Обновляем данные прогресса, только если секция видима
                     if (shouldShowCurrentBudget) {

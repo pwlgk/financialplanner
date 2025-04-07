@@ -105,7 +105,7 @@ class BudgetSetupViewModel(
                         Log.d("BudgetSetupVM", "Initial limits: $initialLimits, Period: $initialMonth/$initialYear")
                     } else {
                         Log.e("BudgetSetupVM", "Budget with ID $budgetIdToEdit not found for editing.")
-                        _uiState.update { it.copy(errorMessage = R.string.error_loading_budget_details.toString()) } // TODO: Context
+                        _uiState.update { it.copy(errorMessage = R.string.error_loading_budget_details.toString()) }
                     }
                 } else {
                     // Если новая цель, пытаемся сгенерировать имя на основе текущей даты (если период не выбран)
@@ -163,11 +163,11 @@ class BudgetSetupViewModel(
 
         // Валидация
         if (!currentState.periodSelected || startDate == null || endDate == null) {
-            _uiState.update { it.copy(errorMessage = R.string.error_select_period.toString()) } // TODO: Context
+            _uiState.update { it.copy(errorMessage = R.string.error_select_period.toString()) }
             return
         }
         if (currentState.currentLimits.isEmpty()) {
-            _uiState.update { it.copy(errorMessage = R.string.error_set_limits.toString()) } // TODO: Context
+            _uiState.update { it.copy(errorMessage = R.string.error_set_limits.toString()) }
             return
         }
         // --- Конец валидации ---
@@ -202,13 +202,13 @@ class BudgetSetupViewModel(
     /** Обработчик ошибок загрузки. */
     private fun handleLoadingError(e: Throwable) {
         Log.e("BudgetSetupVM", "Error loading initial data", e)
-        _uiState.update { it.copy(isLoading = false, errorMessage = "Ошибка загрузки данных: ${e.message}") } // TODO: Ресурс строки
+        _uiState.update { it.copy(isLoading = false, errorMessage = "Ошибка загрузки данных: ${e.message}") }
     }
 
     /** Обработчик ошибок сохранения. */
     private fun handleSaveError(e: Throwable) {
         Log.e("BudgetSetupVM", "Error saving budget", e)
-        _uiState.update { it.copy(isSaving = false, errorMessage = "Ошибка сохранения бюджета: ${e.message}") } // TODO: Ресурс строки
+        _uiState.update { it.copy(isSaving = false, errorMessage = "Ошибка сохранения бюджета: ${e.message}") }
     }
 
 

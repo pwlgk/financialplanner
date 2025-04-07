@@ -14,47 +14,41 @@ import android.view.ViewGroup
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.diplom.financialplanner.R
 import com.diplom.financialplanner.databinding.ItemReportCategoryDetailBinding
-import com.diplom.financialplanner.ui.reports.CategoryComparisonData // Убедитесь, что импорт есть
-//import com.diplom.financialplanner.util.getResId // Убрали, используем встроенную версию
+import com.diplom.financialplanner.util.getResId // Используем вашу утилиту
 import java.text.NumberFormat
 import java.util.Currency
 import java.util.Locale
 import kotlin.math.abs
-import kotlin.math.roundToInt
 
-// Модель данных ReportDetailItem (без изменений)
+// Модель данных для элемента списка деталей отчета
 data class ReportDetailItem(
     val categoryId: Long,
     val categoryName: String?,
     val categoryIconResName: String?,
     val categoryColorHex: String?,
     val currentAmount: Double,
-    val percentage: Float? = null, // Оставляем Float? как было изначально
-    val previousAmount: Double? = null,
-    val totalAmount: Double? = null
+    val transactionCount: Int? = null, // Количество операций
+    val percentage: Float? = null,    // Процент от общей суммы
+    val previousAmount: Double? = null, // Оставляем для будущего
+    val totalAmount: Double? = null     // Оставляем для будущего
 )
 
 class ReportDetailAdapter : ListAdapter<ReportDetailItem, ReportDetailAdapter.ReportDetailViewHolder>(ReportDetailDiffCallback()) {
 
-    enum class Mode { TOP_SPENDING, COMPARISON }
-    private var currentMode: Mode = Mode.TOP_SPENDING
 
     private val currencyFormatter: NumberFormat = NumberFormat.getCurrencyInstance(Locale("ru", "RU")).apply {
-        currency = Currency.getInstance("RUB"); maximumFractionDigits = 0
+        currency = Currency.getInstance("RUB"); maximumFractionDigits = 2 // Оставляем копейки
     }
-    private val percentFormatter: NumberFormat = NumberFormat.getPercentInstance(Locale.getDefault()).apply {
-        maximumFractionDigits = 1
+    // Форматтер для процентов
+    private val numberPercentFormatter: NumberFormat = NumberFormat.getNumberInstance(Locale.getDefault()).apply {
+        maximumFractionDigits = 1 // Один знак после запятой для процентов
     }
-    private val numberPercentFormatter: NumberFormat = NumberFormat.getNumberInstance(Locale.US).apply {
-        maximumFractionDigits = 1
-    }
-
-    fun setMode(mode: Mode) { if (currentMode != mode) { currentMode = mode } }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReportDetailViewHolder {
         val binding = ItemReportCategoryDetailBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -62,7 +56,7 @@ class ReportDetailAdapter : ListAdapter<ReportDetailItem, ReportDetailAdapter.Re
     }
 
     override fun onBindViewHolder(holder: ReportDetailViewHolder, position: Int) {
-        holder.bind(getItem(position), currentMode)
+        holder.bind(getItem(position)) // Передаем только item
     }
 
     class ReportDetailViewHolder(
@@ -72,136 +66,95 @@ class ReportDetailAdapter : ListAdapter<ReportDetailItem, ReportDetailAdapter.Re
     ) : RecyclerView.ViewHolder(binding.root) {
 
         @SuppressLint("ResourceType")
-        fun bind(item: ReportDetailItem, mode: Mode) {
+        fun bind(item: ReportDetailItem) {
             val context = binding.root.context
-            binding.tvCategoryNameReport.text = item.categoryName ?: context.getString(R.string.unknown_category)
+            binding.tvCategoryNameReport.text = item.categoryName ?: context.getString(R.string.category_unknown)
 
-            // --- Иконка и цвет ---
-            val iconDrawable: Drawable? = item.categoryIconResName?.let { iconName ->
-                getResId(iconName, context).takeIf { it != 0 }?.let { ContextCompat.getDrawable(context, it) }
-            } ?: ContextCompat.getDrawable(context, R.drawable.ic_category_other)
-            binding.ivCategoryIconReport.setImageDrawable(iconDrawable)
-            val colorInt = try { item.categoryColorHex?.let { Color.parseColor(it) } ?: getThemeColor(context, R.color.light_onPrimary) } catch (e: Exception) { getThemeColor(context, R.color.light_onPrimary) } // Используем атрибут темы
+            // --- Иконка и Цвет Фона ---
+            val colorInt = try {
+                item.categoryColorHex?.let { Color.parseColor(it) }
+                    ?: getThemeColor(context, com.google.android.material.R.attr.colorSecondary) // Fallback
+            } catch (e: Exception) {
+                getThemeColor(context, com.google.android.material.R.attr.colorSecondary)
+            }
+
+            // 1. Устанавливаем ЦВЕТ ФОНА для кружка
             (binding.ivCategoryIconReport.background as? GradientDrawable)?.setColor(colorInt)
-            val iconTintColor = if (Color.luminance(colorInt) > 0.5) Color.BLACK else Color.WHITE
+
+            // 2. Получаем ИКОНКУ категории
+            val iconDrawable: Drawable? = item.categoryIconResName?.let { iconName ->
+                getResId(iconName, context).takeIf { it != 0 }?.let { ContextCompat.getDrawable(context, it)?.mutate() } // mutate() важен для tint
+            } ?: ContextCompat.getDrawable(context, R.drawable.ic_category_other)?.mutate() // Иконка по умолчанию
+
+            // 3. Устанавливаем ИКОНКУ в ImageView
+            binding.ivCategoryIconReport.setImageDrawable(iconDrawable)
+
+            // 4. Определяем КОНТРАСТНЫЙ ЦВЕТ для самой иконки (tint)
+            // Используем ColorUtils.calculateLuminance для определения, светлый фон или темный
+            val luminance = ColorUtils.calculateLuminance(colorInt)
+            val iconTintColor = if (luminance > 0.5) { // Если фон светлый
+                getThemeColor(context, com.google.android.material.R.attr.colorOnSecondaryContainer) // Берем темный цвет текста/иконки на контейнере
+            } else { // Если фон темный
+                getThemeColor(context, com.google.android.material.R.attr.colorOnSecondary) // Берем светлый цвет текста/иконки на основном цвете (часто белый)
+            }
             binding.ivCategoryIconReport.imageTintList = ColorStateList.valueOf(iconTintColor)
-            // --- Конец Иконка и цвет ---
+            // --- Конец Иконка и Цвет ---
 
             // --- Основная сумма ---
             val currentAmountFormatted = currencyFormatter.format(abs(item.currentAmount))
-            var amountColor = getThemeColor(context, R.color.black) // Цвет текста по умолчанию из темы
-
-            // Определяем цвет суммы для РАСХОДОВ (предполагаем, что currentAmount > 0 для расходов)
-            if (item.currentAmount > 0 && (mode == Mode.TOP_SPENDING || (mode == Mode.COMPARISON && (item.previousAmount==null || item.currentAmount >= item.previousAmount)))) {
-                amountColor = ContextCompat.getColor(context, R.color.colorExpense)
-            }
-            // Определяем цвет суммы для ДОХОДОВ (предполагаем, что currentAmount < 0 для доходов)
-            // else if (item.currentAmount < 0) {
-            //    amountColor = ContextCompat.getColor(context, R.color.colorIncome)
-            // }
-
+            val amountColorRes = if (item.currentAmount > 0.01) R.color.colorExpense
+            else if (item.currentAmount < -0.01) R.color.colorIncome
+            else com.google.android.material.R.attr.colorOnSurface
+            val amountColor = if (amountColorRes == R.color.colorExpense || amountColorRes == R.color.colorIncome) {
+                ContextCompat.getColor(context, amountColorRes)
+            } else { getThemeColor(context, amountColorRes) }
             binding.tvCategoryAmountReport.setTextColor(amountColor)
             binding.tvCategoryAmountReport.text = currentAmountFormatted
 
-            // --- Дополнительная информация ---
-            var comparisonText = ""
-            var comparisonTextColor = getThemeColor(context, android.R.attr.textColorSecondary)
 
-            binding.tvCategoryComparisonReport.visibility = View.VISIBLE // Показываем по умолчанию
+            // --- Дополнительная информация: Количество и Процент ---
+            val countText = item.transactionCount?.let {
+                context.resources.getQuantityString(R.plurals.transaction_count, it, it)
+            } ?: ""
 
-            when (mode) {
-                Mode.TOP_SPENDING -> {
-                    // Рассчитываем процент как Double?
-                    val percentageToShow: Double? = item.percentage?.toDouble()
-                        ?: item.totalAmount?.takeIf { it > 0 }?.let { total ->
-                            (abs(item.currentAmount) / total * 100)
-                        }
+            val percentageToShow = item.percentage // Получаем процент из Item
+            val percentageText = if (percentageToShow != null && percentageToShow >= 0.1) {
+                // Используем форматтер для чисел + знак %
+                "${numberPercentFormatter.format(percentageToShow)}%"
+            } else { "" }
 
-                    // --- ИСПРАВЛЕННОЕ СРАВНЕНИЕ ---
-                    val shouldShowPercentage = percentageToShow != null && percentageToShow >= 0.1
+            // Собираем строку
+            val detailText = listOfNotNull(countText.takeIf { it.isNotEmpty() }, percentageText.takeIf { it.isNotEmpty() })
+                .joinToString("  •  ") // Используем точку как разделитель
 
-                    if (shouldShowPercentage) {
-                        comparisonText = "${numberPercentFormatter.format(percentageToShow)}% ${context.getString(R.string.report_of_total)}"
-                        // Цвет текста оставляем по умолчанию (второстепенный)
-                    } else {
-                        comparisonText = "" // Скрываем, если нечего показывать
-                    }
-                }
-                Mode.COMPARISON -> {
-                    if (item.previousAmount != null) {
-                        val diff = item.currentAmount - item.previousAmount
-                        val diffFormatted = currencyFormatter.format(abs(diff))
-                        val diffSign = if (diff > 0.01) "+" else if (diff < -0.01) "-" else ""
-                        val diffColorResId = when {
-                            diff > 0.01 -> R.color.colorExpense // Рост расхода - красный
-                            diff < -0.01 -> R.color.colorIncome  // Снижение расхода - зеленый
-                            else -> 0 // Нет изменений
-                        }
-                        comparisonText = "$diffSign $diffFormatted ${context.getString(R.string.report_vs_previous)}"
-                        if (diffColorResId != 0) {
-                            comparisonTextColor = ContextCompat.getColor(context, diffColorResId)
-                        } // Иначе остается цвет по умолчанию
-                    } else {
-                        comparisonText = context.getString(R.string.report_no_previous_data)
-                    }
-                }
-            }
-
-            binding.tvCategoryComparisonReport.text = comparisonText
-            binding.tvCategoryComparisonReport.setTextColor(comparisonTextColor)
-            binding.tvCategoryComparisonReport.visibility = if (comparisonText.isNotEmpty()) View.VISIBLE else View.GONE
+            binding.tvCategoryComparisonReport.text = detailText // Используем этот TextView
+            binding.tvCategoryComparisonReport.setTextColor(getThemeColor(context, android.R.attr.textColorSecondary)) // Второстепенный цвет
+            binding.tvCategoryComparisonReport.visibility = if (detailText.isNotEmpty()) View.VISIBLE else View.GONE
         }
 
-        /** Вспомогательная функция для получения цвета из атрибута темы. */
         @ColorInt
         private fun getThemeColor(context: Context, @AttrRes themeAttrId: Int): Int {
             val typedValue = TypedValue()
             return if (context.theme.resolveAttribute(themeAttrId, typedValue, true)) {
-                if (typedValue.type >= TypedValue.TYPE_FIRST_COLOR_INT && typedValue.type <= TypedValue.TYPE_LAST_COLOR_INT) {
-                    typedValue.data
-                } else {
+                if (typedValue.type >= TypedValue.TYPE_FIRST_COLOR_INT && typedValue.type <= TypedValue.TYPE_LAST_COLOR_INT) { typedValue.data }
+                else if (typedValue.type == TypedValue.TYPE_REFERENCE) {
                     try { ContextCompat.getColor(context, typedValue.resourceId) }
-                    catch (e: Exception) {
-                        Log.w("ReportDetailVH", "Could not resolve theme attribute as color resource: $themeAttrId", e)
-                        // ИСПРАВЛЕНИЕ: Используем стандартный атрибут как fallback
-                        getFallbackThemeColor(context, android.R.attr.textColorSecondary)
-                    }
-                }
-            } else {
-                Log.w("ReportDetailVH", "Could not resolve theme attribute: $themeAttrId")
-                // ИСПРАВЛЕНИЕ: Используем стандартный атрибут как fallback
-                getFallbackThemeColor(context, android.R.attr.textColorSecondary)
-            }
+                    catch (e: Exception) { Log.w("ReportDetailVH", "Could not resolve theme attr $themeAttrId resource ID ${typedValue.resourceId} as color.", e); Color.GRAY }
+                } else { Log.w("ReportDetailVH", "Theme attr $themeAttrId resolved to unexpected type: ${typedValue.type}"); Color.GRAY }
+            } else { Log.w("ReportDetailVH", "Could not resolve theme attribute: $themeAttrId"); Color.GRAY }
         }
-
-        /** Получение запасного цвета, если атрибут не найден */
-        @ColorInt
-        private fun getFallbackThemeColor(context: Context, @AttrRes fallbackAttrResId: Int) : Int {
-            val typedValue = TypedValue()
-            context.theme.resolveAttribute(fallbackAttrResId, typedValue, true)
-            // Предполагаем, что textColorSecondary точно есть
-            return if (typedValue.type >= TypedValue.TYPE_FIRST_COLOR_INT && typedValue.type <= TypedValue.TYPE_LAST_COLOR_INT) {
-                typedValue.data
-            } else {
-                ContextCompat.getColor(context, typedValue.resourceId)
-            }
-        }
-
     }
+
     // DiffUtil Callback
     private class ReportDetailDiffCallback : DiffUtil.ItemCallback<ReportDetailItem>() {
-        override fun areItemsTheSame(oldItem: ReportDetailItem, newItem: ReportDetailItem): Boolean = oldItem.categoryId == newItem.categoryId
-        override fun areContentsTheSame(oldItem: ReportDetailItem, newItem: ReportDetailItem): Boolean = oldItem == newItem
-    }
-}
-
-// Упрощенная утилита getResId, использующая context.resources.getIdentifier
-fun getResId(resName: String?, context: Context): Int {
-    if (resName.isNullOrBlank()) return 0
-    return try {
-        context.resources.getIdentifier(resName, "drawable", context.packageName)
-    } catch (e: Exception) {
-        Log.e("ResourceUtils", "Failed to get resource ID for drawable: $resName", e)
-        0
+        override fun areItemsTheSame(oldItem: ReportDetailItem, newItem: ReportDetailItem): Boolean {
+            // Сравниваем по ID для стабильности списка
+            return oldItem.categoryId == newItem.categoryId
+        }
+        @SuppressLint("DiffUtilEquals") // Подавляем предупреждение, т.к. data class сравнивает все поля
+        override fun areContentsTheSame(oldItem: ReportDetailItem, newItem: ReportDetailItem): Boolean {
+            // Сравниваем все содержимое для определения изменений
+            return oldItem == newItem
+        }
     }
 }

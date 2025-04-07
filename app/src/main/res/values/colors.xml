@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- =========================================== -->
-    <!-- == Светлая Тема (Light Theme) Цвета       == -->
-    <!-- =========================================== -->
 
     <!-- Primary (Тёмный фиолетовый) -->
     <color name="light_primary">#4B2E83</color> <!-- Royal Purple -->
@@ -94,12 +91,6 @@
     <color name="white">#FFFFFFFF</color>
     <color name="transparent">#00000000</color>
 
-
-    <!-- =========================================== -->
-    <!-- == Обратная совместимость (Компромисс!)   == -->
-    <!-- == Эти цвета НЕ БУДУТ меняться в темной  == -->
-    <!-- == теме при использовании из Kotlin кода  == -->
-    <!-- =========================================== -->
     <color name="colorPrimary">@color/light_primary</color> <!-- Ссылка на светлый primary -->
     <color name="colorPrimaryVariant">@color/light_primaryContainer</color> <!-- Ссылка на светлый primaryContainer (или light_primary, если надо темнее) -->
     <color name="colorOnPrimary">@color/light_onPrimary</color>

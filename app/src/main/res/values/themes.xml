@@ -49,35 +49,12 @@
         <!-- Стиль для MaterialAlertDialog -->
         <item name="materialAlertDialogTheme">@style/ThemeOverlay.App.MaterialAlertDialog</item>
 
-        <!-- Настройка шрифтов и форм (раскомментируйте и настройте при необходимости) -->
-        <!-- <item name="fontFamily">@font/your_font_family</item> -->
-        <!-- <item name="android:fontFamily">@font/your_font_family</item> -->
-        <!-- <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.App.SmallComponent</item> -->
-        <!-- <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.App.MediumComponent</item> -->
-        <!-- <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.App.LargeComponent</item> -->
-
         <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
     </style>
 
     <!-- Базовый стиль для MaterialAlertDialog (будет адаптироваться к теме) -->
     <style name="ThemeOverlay.App.MaterialAlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
-        <!-- <item name="colorSurface">@color/some_dialog_color</item> -->
-        <!-- <item name="materialAlertDialogTitleTextStyle">@style/MyDialogTitleText</item> -->
     </style>
 
-    <!-- Примеры настройки форм (раскомментируйте и настройте при необходимости) -->
-    <!--
-    <style name="ShapeAppearance.App.SmallComponent" parent="ShapeAppearance.Material3.SmallComponent">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">8dp</item>
-    </style>
-    <style name="ShapeAppearance.App.MediumComponent" parent="ShapeAppearance.Material3.MediumComponent">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">12dp</item>
-    </style>
-     <style name="ShapeAppearance.App.LargeComponent" parent="ShapeAppearance.Material3.LargeComponent">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">16dp</item>
-    </style>
-     -->
+
 </resources>

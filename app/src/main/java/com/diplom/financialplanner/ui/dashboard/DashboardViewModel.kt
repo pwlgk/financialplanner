@@ -156,7 +156,6 @@ class DashboardViewModel(
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.DAY_OF_MONTH, 1); calendar.set(Calendar.HOUR_OF_DAY, 0); /*...*/ val startDate = calendar.time
         calendar.add(Calendar.MONTH, 1); calendar.add(Calendar.MILLISECOND, -1); /*...*/ val endDate = calendar.time
-        // Log.d("DashboardVM_Debug", "Monthly Expenses Flow - Period: $startDate to $endDate") // Можно оставить для отладки
 
         return allTransactionsFlow // Используем переданный поток
             .map { allTransactions ->
@@ -168,7 +167,6 @@ class DashboardViewModel(
             .distinctUntilChanged()
     }
 
-    // ... (deleteRecentTransaction, clearErrorMessage, provideFactory) ...
     // Метод удаления (без изменений)
     fun deleteRecentTransaction(transaction: TransactionEntity) {
         viewModelScope.launch {
@@ -182,12 +180,12 @@ class DashboardViewModel(
         }
     }
 
-    // Метод очистки ошибки (без изменений)
+    // Метод очистки ошибки
     fun clearErrorMessage() {
         _uiState.update { it.copy(errorMessage = null) }
     }
 
-    // Фабрика (без изменений)
+    // Фабрика
     companion object {
         fun provideFactory(): ViewModelProvider.Factory = viewModelFactory {
             initializer {

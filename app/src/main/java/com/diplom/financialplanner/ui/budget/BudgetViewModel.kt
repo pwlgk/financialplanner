@@ -98,12 +98,12 @@ class BudgetViewModel(
             try {
                 budgetRepository.deleteBudget(budget)
                 // Формируем сообщение с именем удаленного бюджета
-                val message = R.string.budget_deleted_feedback.toString() + " \"${budget.name}\"" // TODO: Получать строку из контекста
+                val message = R.string.budget_deleted_feedback.toString() + " \"${budget.name}\""
                 _uiState.update { it.copy(userMessage = message) }
                 Log.i("BudgetVM", "Budget deleted successfully: ID=${budget.id}")
             } catch (e: Exception) {
                 Log.e("BudgetVM", "Error deleting budget ${budget.id}", e)
-                _uiState.update { it.copy(errorMessage = "Ошибка удаления бюджета: ${e.message}") } // TODO: Ресурс строки
+                _uiState.update { it.copy(errorMessage = "Ошибка удаления бюджета: ${e.message}") }
             }
         }
     }
@@ -115,7 +115,7 @@ class BudgetViewModel(
             it.copy(
                 isLoadingAllBudgets = false,
                 isLoadingProgress = false,
-                errorMessage = "Ошибка загрузки $context: ${e.message}" // TODO: Ресурс строки
+                errorMessage = "Ошибка загрузки $context: ${e.message}"
             )
         }
     }

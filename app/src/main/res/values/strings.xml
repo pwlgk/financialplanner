@@ -84,8 +84,7 @@
     <string name="report_expense_comparison">Сравнение Расходов</string>
     <string name="no_data_short">Нет данных</string>
     <string name="error_loading_report_generic">Ошибка загрузки отчета: %1$s</string>
-    <string name="category_deleted_placeholder">Удаленная категория #%1$d</string>
-    <string name="report_of_total">от итога</string>
+
     <string name="report_vs_previous">vs пред.</string>
     <string name="report_no_previous_data">нет данных</string>
 
@@ -118,8 +117,8 @@
 
     <!-- Отчеты -->
     <string name="report_type">Тип отчета</string>
-    <string name="report_expense_by_category">Расходы</string>
-    <string name="report_income_by_source">Доходы</string>
+    <string name="report_expense_by_category">Расход</string>
+    <string name="report_income_by_source">Доход</string>
     <string name="report_income_vs_expense">Доходы и Расходы</string>
     <string name="select_period">Выбрать период</string>
     <string name="no_data_for_report">Нет данных для построения отчета за выбранный период.</string>
@@ -179,5 +178,23 @@
     <string name="error_no_data_to_export">Нет данных для экспорта</string>
     <string name="creating_report_file">Создание файла отчета...</string>
     <string name="category_unknown">Неизвестная категория</string>
+    <string name="other_categories">Другие категории</string>
+    <string name="category_deleted_placeholder">Удаленная категория #%d</string>
+    <string name="report_of_total">от итога</string>
+    <string name="total_expenses">Общие расходы</string>
+    <string name="total_income">Общие доходы</string>
+    <string name="balance_for_period">Баланс за период</string>
+    <string name="category_deleted_placeholder_prefix">Категория #</string>
+    <string name="details_expenses_by_category">Детализация расходов</string>
+    <string name="details_income_by_source">Детализация доходов</string>
+
+
+    <plurals name="transaction_count">
+        <item quantity="one">%d операция</item>
+        <item quantity="few">%d операции</item>
+        <item quantity="many">%d операций</item>
+        <item quantity="other">%d операции</item>
+    </plurals>
+
 
 </resources>

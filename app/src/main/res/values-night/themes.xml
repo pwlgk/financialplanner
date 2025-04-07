@@ -1,11 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Тема приложения для ночного режима -->
     <style name="Theme.FinancialPlanner" parent="Theme.Material3.DayNight.NoActionBar">
-        <!--
-            Material 3 автоматически генерирует темную палитру из цветов,
-            заданных в основном файле themes.xml (и colors.xml).
-            Переопределяем здесь только то, что нужно изменить СПЕЦИАЛЬНО для темной темы.
-        -->
 
         <!-- Основные цвета бренда (Используем переопределенные темные версии из colors.xml) -->
         <item name="colorPrimary">@color/dark_primary</item>
@@ -45,8 +40,6 @@
         <item name="colorControlNormal">@color/colorExpense</item>
         <!-- Цвет статус-бара (под цвет поверхности для темной темы) -->
         <item name="android:statusBarColor">?attr/colorSurface</item>
-        <!-- Для светлых иконок в темном статус-баре (обычно устанавливается автоматически) -->
-        <!-- <item name="android:windowLightStatusBar" tools:targetApi="m">false</item> -->
 
         <!-- Кастомные атрибуты цвета (оставляем тот же, если подходит) -->
         <item name="colorWarning">@color/colorWarning</item>

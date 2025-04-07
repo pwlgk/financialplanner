@@ -207,7 +207,6 @@ class AddEditIncomeFragment : Fragment() {
                         val successMessageResId = if (viewModel.uiState.value.isEditMode) R.string.income_updated_success else R.string.income_saved_success
                         Toast.makeText(requireContext(), successMessageResId, Toast.LENGTH_SHORT).show()
                         findNavController().navigateUp()
-                        // viewModel.consumeInputSuccess() // Не нужно, т.к. ViewModel уничтожится
                     }
             }
         }

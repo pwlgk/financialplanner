@@ -27,7 +27,6 @@ class GoalAdapter(
 
     private val currencyFormatter: NumberFormat = NumberFormat.getCurrencyInstance(Locale("ru", "RU")).apply {
         maximumFractionDigits = 0 // Без копеек
-        // currency = Currency.getInstance("RUB") // Можно указать валюту
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GoalViewHolder {
@@ -90,8 +89,6 @@ class GoalAdapter(
             binding.progressBarGoal.progressTintList = ColorStateList.valueOf(progressColor)
             binding.tvGoalProgressPercent.setTextColor(percentColor)
 
-            // Можно добавить визуальное подтверждение достижения цели
-            // binding.tvGoalName.alpha = if (achieved) 0.7f else 1.0f // Например, сделать текст бледнее
         }
     }
 
