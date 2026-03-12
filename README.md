@@ -38,7 +38,7 @@
 
 1. Склонируйте репозиторий:
    ```bash
-   git clone <url-вашего-репозитория>
+   git clone https://github.com/pwlgk/financialplanner.git
    ```
 2. Откройте проект в **Android Studio** (рекомендуется последняя стабильная версия).
 3. Дождитесь завершения Gradle Sync.
